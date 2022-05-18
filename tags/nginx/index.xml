@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Nginx on SHUNCON</title>
+    <link>/tags/nginx/</link>
+    <description>Recent content in Nginx on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Thu, 07 Feb 2019 10:20:57 +0800</lastBuildDate><atom:link href="/tags/nginx/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Nginx的三个status模块使用</title>
+      <link>/post/nginx-status/</link>
+      <pubDate>Thu, 07 Feb 2019 10:20:57 +0800</pubDate>
+      
+      <guid>/post/nginx-status/</guid>
+      <description>&lt;h1 id=&#34;nginx的3个status模块使用&#34;&gt;nginx的3个status模块使用&lt;/h1&gt;
+&lt;h2 id=&#34;模块说明&#34;&gt;模块说明&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;nginx-module-vts： https://github.com/vozlt/nginx-module-vts
+
+ngx_http_stub_status_module：自带但默认不构建的。
+
+ngx_http_stub_status_module  https://github.com/yaoweibin/nginx_upstream_check_module
+&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

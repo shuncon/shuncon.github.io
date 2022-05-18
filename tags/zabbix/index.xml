@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Zabbix on SHUNCON</title>
+    <link>/tags/zabbix/</link>
+    <description>Recent content in Zabbix on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Mon, 10 Dec 2018 10:43:46 +0800</lastBuildDate><atom:link href="/tags/zabbix/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>zabbix监控tomcat</title>
+      <link>/post/zabbix-tomcat/zabbix-tomcat/</link>
+      <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+      
+      <guid>/post/zabbix-tomcat/zabbix-tomcat/</guid>
+      <description>版本  zabbix4.0前提条件 编译
+ 编译zabbix server时需要提供java支持，即添加--enable-java该选项。系统也要安装有jdk版本yum
+ yum -y install zabbix-java-gateway
+ 开始监控 修改zabbix_server.conf
+ vim/etc/zabbix/zabbix_server.conf
+  JavaGateway=10.0.18.118 //java网关地址，即server端ip地址JavaGatewayPort=10052 //网关端口，取消注释开启即可StartPollers=50StartPingers=100StartJavaPollers=5 开启java配置已经完成。 vim /etc/zabbix/zabbix_java_gateway.conf
+ LISTEN_IP=&amp;quot;0.0.0.0&amp;quot; #监听的IPLISTEN_PORT=10052 #监听的端口PID_FILE=&amp;quot;/var/run/zabbix/zabbix_java.pid&amp;quot; #pid保存路径START_POLLERS=5 #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况TIMEOUT=20 systemctl restart zabbix-server systemctl start zabbix-java-gatewa systemctl enable zabbix-java-gatewa 重启，即可
+ 修改客户端中的tomcat文件
+ vim bin/catalina.sh
+ JAVA_OPTS=&amp;quot;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;quot;//web端使用ipv4协议，默认使用ipv6CATALINA_OPTS=&amp;quot;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345 -Dcom.sun.management.jmxremote.ssl=false -Djava.</description>
+    </item>
+    
+    <item>
+      <title>Zabbix 手机短信报警代码</title>
+      <link>/post/zabbix-tel/</link>
+      <pubDate>Wed, 20 Jun 2018 10:43:46 +0800</pubDate>
+      
+      <guid>/post/zabbix-tel/</guid>
+      <description>&lt;p&gt;由于在公安行业，所管理的服务器不能连接互联网，仅内网通信，但一整天不可能整天盯着zabbix web，特配置为短信报警。&lt;/p&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

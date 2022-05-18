@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MySQL on SHUNCON</title>
+    <link>/tags/mysql/</link>
+    <description>Recent content in MySQL on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright><atom:link href="/tags/mysql/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>MySQL主从复制</title>
+      <link>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+      <description>#MySQL主从复制 原理
+一、什么是主从复制将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。二、主从复制的作用1、主数据库出现问题，可以切换到从数据库。2、可以进行数据库层面的读写分离，3、可以在从数据库上进行日常备份三 过程：将Mater节点的数据通过bin-log二进制文件同步到Slave节点Binary log：主数据库的二进制日志Relay log：从服务器的中继日志第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。环境和安装
+系统：centos7SQL版本：mysql5.7.23 单机多实例3306、3307、3308、3306为Master主节点，3307、3308为Slave从节点解决mysql所需要的的依赖包
+#yum -y install ncurses-devel libaio-devel cmake  #yum -y install ncurses-libs gcc-c++
+msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz安装
+#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql# chown mysql.mysql -R /usr/local/mysql # chmod 777 -R /usr/local/mysql# useradd mysql -r -s /sbin/nologin # mkdir -p /data/data{3306,3307,3308}/data# chown mysql.</description>
+    </item>
+    
+    <item>
+      <title>MySQL基本操作</title>
+      <link>/post/mysql/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/mysql/</guid>
+      <description>这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;lsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示</description>
+    </item>
+    
+  </channel>
+</rss>

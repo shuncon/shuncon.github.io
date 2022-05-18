@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Ansible on SHUNCON</title>
+    <link>/tags/ansible/</link>
+    <description>Recent content in Ansible on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Mon, 10 Dec 2018 10:43:46 +0800</lastBuildDate><atom:link href="/tags/ansible/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>使用ansible-cmdb统计服务器使用率</title>
+      <link>/post/ansible-cmdb/</link>
+      <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+      
+      <guid>/post/ansible-cmdb/</guid>
+      <description>1.安装ansible-cmd #curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py#python get-pip.py#pip install ansible-cmdb2.使用ansible-cmdb生成信息 [root@shun ansible]# mkdir out[root@shun ansible]# ansible -m setup --tree out/ all生成网页文件
+ansible-cmdb out/ &amp;gt; /home/overview.html或者使用：ansible-cmdb -t csv out &amp;gt; cmdb.csv将信息写入CSV文件中，在下载到win上面用office办公软件打开即可将网页文件取回本地用浏览器打开即可得到以下效果： </description>
+    </item>
+    
+    <item>
+      <title>ansible简单使用</title>
+      <link>/post/ansible-1/</link>
+      <pubDate>Sat, 10 Nov 2018 10:43:46 +0800</pubDate>
+      
+      <guid>/post/ansible-1/</guid>
+      <description>环境
+ansible 服务端 和两台客户端必须建立ssh免密认证： 本次安装采用：yum -y install ansibleansible 服务端操作：ssh-keygenssh-copy-id -i root@10.0.18.101建立免密认证后 ssh root@10.0.18.101验证一下是否成功编辑ansible host文件
+添加两个在host文件中，该hosts文件属于ansible的管理清单
+vim /etc/ansible/hosts
+SSH端口不是22端口则在该hosts文件中使用以下方法：
+ansible_ssh_host=10.0.18.11 #主机iPansible_ssh_port=3389 #SSH端口ansible_ssh_user=root #ssh所远程的系统用户ansible_ssh_pass=shunconf #用户密码简单使用
+#ansible all -a &#39;/bin/free -m&#39; 查看主机内存使用和硬盘空间，通过系统的命令实现！ #ansible all -m ping -u root
+#-u是指定用户，可以不加的。ping是ansible中的一个模块 -m参数则表示调用该模块。 all参数代表全部。ansible 10.0.18.101 -m ping则ping指定IP
+主机可以ping通：
+获取文件到ansible主机
+#ansible all -m fetch -a &#39;src=/etc/resolv.conf dest=/opt&#39;  使用fetch模块实现，-a选项则传递模块使用的参数：src与dest </description>
+    </item>
+    
+  </channel>
+</rss>

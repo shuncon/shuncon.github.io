@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>ELK集群 部署</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="ELK集群  环境  es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装es-node1 操作  安装   #yum -y install jre
+  #wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+  #tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/
+  创建相关目录   #mkdir -p /data/server/es/elasticsearch-6.6.1/logs #mkdir /data/es/data -p #数据存储目录
+  编辑配置文件   #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+ cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="ELK集群 部署">
+    <meta name="twitter:description" content="ELK集群  环境  es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装es-node1 操作  安装   #yum -y install jre
+  #wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+  #tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/
+  创建相关目录   #mkdir -p /data/server/es/elasticsearch-6.6.1/logs #mkdir /data/es/data -p #数据存储目录
+  编辑配置文件   #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+ cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="ELK集群 部署">
+  <meta property="og:description" content="ELK集群  环境  es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装es-node1 操作  安装   #yum -y install jre
+  #wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+  #tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/
+  创建相关目录   #mkdir -p /data/server/es/elasticsearch-6.6.1/logs #mkdir /data/es/data -p #数据存储目录
+  编辑配置文件   #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+ cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.">
+  <meta property="og:url" content="/post/elk-make/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/elk-make/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">ELK集群 部署</h1>
+      <p class="post-meta">@SHUNCON · Jan 1, 0001 · 2 min read</p>
+    </header>
+    <article class="post-content"><h1 id="elk集群">ELK集群</h1>
+<ul>
+<li>环境</li>
+</ul>
+<pre tabindex="0"><code>es-node1    10.0.18.118   主节点
+es-node2     10.0.18.117  从节点
+
+用户权限说明：
+除了elasticsearch不能用root运行，其他程序均可使用root安装
+
+</code></pre><h2 id="es-node1-操作">es-node1 操作</h2>
+<ul>
+<li>安装</li>
+</ul>
+<blockquote>
+<p>#yum -y install jre</p>
+</blockquote>
+<blockquote>
+<p>#wget <a href="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz">https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>#tar xf elasticsearch-6.6.1.tar.gz  -C /data/server/es/</p>
+</blockquote>
+<ul>
+<li>创建相关目录</li>
+</ul>
+<blockquote>
+<p>#mkdir -p /data/server/es/elasticsearch-6.6.1/logs
+#mkdir /data/es/data -p #数据存储目录</p>
+</blockquote>
+<ul>
+<li>编辑配置文件</li>
+</ul>
+<blockquote>
+<p>#cat elasticsearch.yml|grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &quot;*&quot; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.117] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+
+   以上配置在es配置文件中前后写入必须有空格
+</code></pre><ul>
+<li>系统配置（root用户操作）</li>
+</ul>
+<blockquote>
+<p>#vim /etc/security/limits.conf</p>
+</blockquote>
+<pre tabindex="0"><code>* soft nofile 65536
+
+* hard nofile 131072
+
+* soft nproc 2048
+
+* hard nproc 4096
+     *代表所有用户
+</code></pre><blockquote>
+<p>#vim /etc/sysctl.conf</p>
+</blockquote>
+<p>vm.max_map_count = 655360</p>
+<blockquote>
+<p>#sysctl -p &amp;&amp; reboot 必须重启系统</p>
+</blockquote>
+<ul>
+<li>启动ES</li>
+</ul>
+<blockquote>
+<p>#useradd elk &amp;&amp; su elk
+$./bin/elasticsearch  -d （-d 参数为后台运行）
+$netstat  -tnlp |grep 9200</p>
+</blockquote>
+<blockquote>
+<p>$ curl http://localhost:9200</p>
+</blockquote>
+<p><img src="1.png" alt="1"></p>
+<h2 id="es-node2-操作">es-node2 操作</h2>
+<p>1.重新执行es-node1中的：<code>创建相关目录（数据存储目录）</code> 、 <code>系统配置（root用户操作）</code></p>
+<p>1.1 赋予用户权限</p>
+<blockquote>
+<p>#chown elk.elk -R /data/server/es/<em>es/</em></p>
+</blockquote>
+<blockquote>
+<p>#chown elk.elk -R es/<em>chown elk.elk -R /data/es/</em></p>
+</blockquote>
+<p>2.从es-node1 下发到es-node2（使用root用户下发）</p>
+<blockquote>
+<p>cd /data/server/es</p>
+</blockquote>
+<blockquote>
+<p>scp -r elasticsearch-6.6.1/ 10.0.18.117:&lsquo;pwd&rsquo;
+<code>es2只需要修改node.name即可，其他都与es1相同配置</code></p>
+</blockquote>
+<ul>
+<li>es-node2的配置文件</li>
+</ul>
+<blockquote>
+<p>#cat elasticsearch.yml|grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>
+cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &quot;*&quot; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.118] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+ 以上配置在es配置文件中前后写入必须有空格
+</code></pre><p>3.启动测试即可</p>
+<h2 id="es-node1-安装head插件">es-node1 安装head插件</h2>
+<ul>
+<li>安装教程：https://github.com/mobz/elasticsearch-head</li>
+</ul>
+<pre tabindex="0"><code>git clone git://github.com/mobz/elasticsearch-head.git 
+cd elasticsearch-head
+npm install 
+vim _site/app.js
+#修改 『http://localhost:9200』字段到本机ES端口与IP
+
+grunt server
+#打开浏览器 http://localhost:9100
+
+elasticsearch-head所属组：elk
+</code></pre><p><img src="2.png" alt="2"></p>
+<h1 id="logstash客户端安装配置">Logstash客户端安装配置</h1>
+<p><strong>说明</strong></p>
+<pre tabindex="0"><code>  由于10.0.18.117（es-node2）中有web服务器（nginx+tomcat）搭来玩的，就选择这台来使用安装Logstash
+  安装目录为：
+          /data/server/es/
+安装用户为root
+
+</code></pre><blockquote>
+<p>#wget <a href="https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz">https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>#tar xf logstash-6.6.1.tar.gz &amp;&amp; cd logstash-6.6.1</p>
+</blockquote>
+<ul>
+<li>创建一个test.conf</li>
+</ul>
+<blockquote>
+<p>vim test.conf</p>
+</blockquote>
+<pre tabindex="0"><code>input {
+     stdin{}
+
+}
+
+output {
+     stdout {
+       codec =&gt; rubydebug{}
+     }
+}
+</code></pre><blockquote>
+<p>#./bin/logstash -f test.conf
+#netstat -tnlp |grep 9600     #查看端口是否起来</p>
+</blockquote>
+<ul>
+<li>创建一个test1.conf(提取系统日志)</li>
+</ul>
+<pre tabindex="0"><code>input {　　　　　　　#这里的输入使用的文件，即日志文件messsages
+file {　　　
+path =&gt; “/var/log/messages”　　　＃这是日志文件的绝对路径
+start_position =&gt; “beginning”　＃这个表示从messages的第一行读取，即文件开始处
+}
+}
+
+output {　　　　＃输出到es
+elasticsearch {
+hosts =&gt; [&quot;10.0.18.118:9200&quot;,&quot;10.0.18.117:9200&quot;]
+index =&gt; &quot;system-messages-%{+YYYY-MM}&quot;　＃这里将按照这个索引格式来创建索引
+}
+}
+</code></pre><ul>
+<li>启动</li>
+</ul>
+<blockquote>
+<p>#./bin/logstash -f  test1.conf &amp;   #传输数据将会展示</p>
+</blockquote>
+<blockquote>
+<p>#nohup ./bin/logstash -f  test2.conf  &ndash;config.reload.automatic &amp;</p>
+</blockquote>
+<p><code>nohup .这种后台运行方式 会把许多日志记到这个文件里面去,会在执行目录生成一个nohup.txt 已经读取ES-NODE2的/var/log/messages”中的日志传输到es服务节点上</code>
+<img src="3.png" alt="3"></p>
+<p>这时，到HEAD插件上去看：
+<img src="4-1.png" alt="4">
+<img src="4-2.png" alt="4"></p>
+<h2 id="安装kibana">安装kibana</h2>
+<p><strong>说明</strong></p>
+<pre tabindex="0"><code>  由于10.0.18.118（es-node1）,虽然那台都无所谓。两台es那个es节点挂掉都会成为主节点,反正数据都一样
+  安装目录为：
+          /data/server/es/
+安装用户为elk
+
+</code></pre><blockquote>
+<p>#wget <a href="https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz">https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>#tar xf kibana-6.6.1-linux-x86_64.tar.gz</p>
+</blockquote>
+<blockquote>
+<p>#chown elk.elk kibana-6.6.1-linux-x86_64 -R &amp;&amp; su elk</p>
+</blockquote>
+<blockquote>
+<p>$# cat  config/kibana.yml |grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>server.port: 5601
+server.host: &quot;0.0.0.0&quot;
+elasticsearch.hosts: [&quot;http://localhost:9200&quot;]
+</code></pre><ul>
+<li>启动</li>
+</ul>
+<blockquote>
+<p>$nohup /bin/kibana &amp; #后台运行kibana</p>
+</blockquote>
+<ul>
+<li>WEB
+<img src="5-1.png" alt="5"></li>
+</ul>
+<p><img src="5-2.png" alt="5"></p>
+<p><img src="5-3.png" alt="5"></p>
+<p>这是es中创建的索引数据：
+<img src="5-4.png" alt="5"></p>
+<h2 id="安装metricbeat">安装metricbeat</h2>
+<pre tabindex="0"><code>因为kibana web页面老是崩溃，需要安装此插件来结合使用
+</code></pre><blockquote>
+<p>$curl -L -O <a href="https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz">https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>$tar xzvf metricbeat-6.6.1-linux-x86_64.tar.gz</p>
+</blockquote>
+<blockquote>
+<p>$vim metricbeat.yml #metricbeat配置文件</p>
+</blockquote>
+<pre tabindex="0"><code>metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.kibana:
+
+  host: &quot;127.0.0.1:5601&quot;
+
+output.elasticsearch:
+  hosts: [&quot;127.0.0.1:9200&quot;]
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+</code></pre><blockquote>
+<p>$ ./metricbeat -e</p>
+</blockquote>
+<h2 id="创建索引">创建索引</h2>
+<p>PS : 我把浏览器换为谷歌浏览器可以页面中文了</p>
+<p><img src="6-001.png" alt="6"></p>
+<pre tabindex="0"><code>之前使用logstash在117中采集系统日志到es，那么在kibana就使用这个名称来创建索引
+</code></pre><p><img src="6-01.png" alt="6">
+<img src="6-01.png" alt="6">
+<img src="6-1.png" alt="6">
+<img src="6-2.png" alt="6">
+<img src="6-3.png" alt="6"></p>
+</article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/elk"><span class="tag">ELK</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>738292</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>

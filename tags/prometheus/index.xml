@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Prometheus on SHUNCON</title>
+    <link>/tags/prometheus/</link>
+    <description>Recent content in Prometheus on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Wed, 18 May 2022 17:00:09 +0800</lastBuildDate><atom:link href="/tags/prometheus/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Prometheus监控发现</title>
+      <link>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</link>
+      <pubDate>Wed, 18 May 2022 17:00:09 +0800</pubDate>
+      
+      <guid>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</guid>
+      <description>1.promtheus支持3种自动发现类型  文件发现服务 consul自动发现 dns //此类型很少用  2.基于文件的服务发现 在prometheus目录下创建targets.yaml prome]# cat targets.yaml - targets: - &amp;quot;localhost:10000&amp;quot; - &amp;quot;localhost:10001&amp;quot; labels: env: production - targets: - &amp;quot;loaclhost:10002&amp;quot; labels: staging 配置到prometheus.yml scrape_configs: - job_name: &amp;quot;file-demo&amp;quot; file_sd_config: - files: [&amp;quot;targets.yaml&amp;quot;] ## 可以添加多个yaml，也可以是yml/json等格式 重启prometheus 后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome 配置生效： consul自动发现 安装配置 Consul 在页面 https://www.consul.io/downloads 下载符合自己系统的安装文件：
+# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip # unzip consul_1.10.2_linux_amd64.zip # 将 consul 二进制移动到 PATH 路径下去 # mv consul /usr/local/bin # consul version Consul v1.10.2 Revision 3cb6eeedb Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents) 编写配置文件 # cat demo-service.</description>
+    </item>
+    
+  </channel>
+</rss>

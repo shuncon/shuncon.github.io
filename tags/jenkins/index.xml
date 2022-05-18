@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Jenkins on SHUNCON</title>
+    <link>/tags/jenkins/</link>
+    <description>Recent content in Jenkins on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Thu, 13 Dec 2018 10:43:46 +0800</lastBuildDate><atom:link href="/tags/jenkins/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Jenkins学习笔记-1</title>
+      <link>/post/jenkins-1/</link>
+      <pubDate>Thu, 13 Dec 2018 10:43:46 +0800</pubDate>
+      
+      <guid>/post/jenkins-1/</guid>
+      <description>Jenkins学习笔记 Jenkins介绍
+Jenkins是一个开源持续集成工具开发工具：java（依赖java环境运行）功能：提供了软件开发的持续集成服务特点：支持主流软件配置管理，配合实现软件配置管理、持续集成功能Jenkins优势和应用场景
+主流的运维开发平台，兼容所有主流开发环境插件市场可与海量业内主流开发工具实现集成job为配置单位与日志管理功能，使运维和开发协同工作权限管理划分不同job不同角色强大的负载均衡功能，保证项目的可靠性Jenkins安装和管理 #wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo#rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key确认java环境为8.0或者8.0版本以上，若无则使用：yum -y install java#useradd jenkins#yum -y install jenkins更多安装方式，需要看官网，建议采用war包方式安装：https://jenkins.io/doc/book/installing/更改Jenkins用户启动和端口 #vim /etc/sysconfig/jenkins
+JENKINS_USER=&amp;quot;jenkins&amp;quot; JENKINS_PORT=&amp;quot;8080&amp;quot;#chown -R jenkins:jenkins /var/lib/jenkins/
+#chown -R jenkins:jenkins /var/lib/jenkins/ 备注：若是不使用jenkins用户来运行。这些是必须修改的
+启动：#systemctl start jenkins web浏览：http://192.168.72.132:8080/
+初始化 图中很明显说明，使用cat /var/lib/jenkins/secrets/initialAdminPassword 输入密钥之后才能下一步： 注意，下图邮箱也需要填写的 然后一直下一步就ok了</description>
+    </item>
+    
+  </channel>
+</rss>

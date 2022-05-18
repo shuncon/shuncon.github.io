@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>Gitlab安装部署</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="GitLab是什么
+ GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+ GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 ">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="Gitlab安装部署">
+    <meta name="twitter:description" content="GitLab是什么
+ GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+ GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 ">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Gitlab安装部署">
+  <meta property="og:description" content="GitLab是什么
+ GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+ GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 ">
+  <meta property="og:url" content="/post/gitlab/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/gitlab/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">Gitlab安装部署</h1>
+      <p class="post-meta">@SHUNCON · Nov 3, 2018 · 2 min read</p>
+    </header>
+    <article class="post-content"><p><strong>GitLab是什么</strong></p>
+<pre tabindex="0"><code>  GitLab是一个开源版本控制系统，开发语言是Ruby。
+</code></pre><p><strong>GitLab和GitHub的区别</strong></p>
+<pre tabindex="0"><code>  GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。
+  GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。
+</code></pre><p><strong>GitLab优势</strong></p>
+<pre tabindex="0"><code>   开源免费、差异化的版本管理和同步,GUI界面操作和强大的用户权限管理
+   集成度高，能集成绝大开发工具,支持内置HA，保证高并发的稳定.
+</code></pre><p><strong>GitLab主要服务构成</strong></p>
+<pre tabindex="0"><code>Nginx轻量级web服务器、gitlab-workharse轻量级的反向代理服务、
+gitlab shell用于处理git命令和修改authorized key列表。
+logrotate日志文件管理工具
+</code></pre><p><strong>gitlab工作流程</strong></p>
+<pre tabindex="0"><code>1.创建项目并克隆
+2.创建项目某featuref分支
+3.编写代码并提交至该分支
+4.推送该项目代码到远程gitlab分支服务器
+5.进行代码检查并提交master主分支合并申请
+6.项目领导审查代码并确认合并申请
+</code></pre><p><strong>gitlab社区版安装</strong></p>
+<p><code>#yum -y install curl policycoreutils  openssh‐server  openssh‐clients  postfix</code></p>
+<p>使用官方源安装时间过长可以使用以下清华源：</p>
+<pre tabindex="0"><code>vim /etc/yum.repos.d/gitlab-ce.repo
+[gitlab-ce]
+name=gitlab-ce
+baseurl=http://mirrors.tuna.tsinghua.edu.cn/gitlab-ce/yum/el7
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+
+后使用yum makecache生成yum缓存
+</code></pre><p>安装</p>
+<p><code>yum -y install gitlab-ce</code></p>
+<p><strong>启动postfix</strong></p>
+<p><code>systemctl start postfix &amp;&amp;systemctl enable postfix</code></p>
+<p><strong>创建本地gitlat SSL证书</strong></p>
+<p><code>#mkdir-p /etc/gitlab/ssl</code></p>
+<p>本地密钥生成、签署证书生成、pem证书生成：</p>
+<pre tabindex="0"><code>#openssl genrsa -out &quot;/etc/gitlab/ssl/gitlab.example.com.key&quot; 2048
+#openssl req -new -key &quot;/etc/gitlab/ssl/gitlab.example.com.key&quot; -out &quot;/etc/gitlab/ssl/gitlab.example.com.csr&quot;
+省略部分
+-----
+Country Name (2 letter code) [XX]: 回车即可
+State or Province Name (full name) []:回车即可
+Locality Name (eg, city) [Default City]:回车即可
+Organization Name (eg, company) [Default Company Ltd]:回车即可
+Organizational Unit Name (eg, section) []:回车即可
+Common Name (eg, your name or your server's hostname) []:gitlab.example.com
+Email Address []:admin@example.com 
+
+Please enter the following 'extra' attributes
+to be sent with your certificate request
+A challenge password []:123456 
+An optional company name []: 回车即可
+
+签署证书生成：
+#openssl  x509 -req -days 365 -in &quot;/etc/gitlab/ssl/gitlab.example.com.csr&quot;  -signkey &quot;/etc/gitlab/ssl/gitlab.example.com.key&quot; -out &quot;/etc/gitlab/ssl/gitlab.example.com.crt&quot;
+显示结果：
+Signature ok
+subject=/C=XX/L=Default City/O=Default Company Ltd/CN=gitlab.example.com/emailAddress=admin@example.com
+Getting Private key
+PEM证书生成：
+#openssl  dhparam -out /etc/gitlab/ssl/dhparams.pem  2048
+生成证书时间挺久的 Emmmm...
+
+#ll /etc/gitlab/ssl/ 查看证书是否生成4个证书文件
+#chmod 600 /etc/gitlab/ssl/* 赋予600权限
+
+</code></pre><p><strong>修改gitlab.rb</strong>
+<code>vim /etc/gitlab/gitlab.rb</code></p>
+<pre tabindex="0"><code>找到external_url 'https://gitlab.example.com/' 将http改为https
+
+找到 redirect_http_to_https
+修改 nginx ['redirect_http_to_https'] =true 将所有http请求转发到
+https
+
+找到ssl_certificate
+修改 nginx ['ssl_certificate'] =&quot;/etc/gitlab/ssl/gitlab.example.com.crt&quot;
+
+修改nginx ['ssl_certificate_key'] =&quot;/etc/gitlab/ssl/gitlab.example.com.key&quot;
+
+修改nginx ['ssl_dhparam'] = &quot;/etc/gitlab/ssl/dhparams.pem&quot;
+
+</code></pre><p><code>gitlab-ctl  reconfigure</code>初始化部署gitlab服务配置</p>
+<pre tabindex="0"><code>看到这里，gitlab初始化完成Running handlers:Running handlers completeChef Client finished, 435/620 resources updated in 02 minutes 53 secondsgitlab Reconfigured!
+</code></pre><p>修改Gitlab-http.conf
+<code>vim /var/opt/gitlab/nginx/conf/gitlab-http.conf</code></p>
+<pre tabindex="0"><code>server_name gitlab.example.com;  rewrite ^(.*)$  https://$host$1 permanent; #添加此行即可
+</code></pre><p><code>gitlab-ctl restart</code>  #重启使配置文件生效</p>
+<p><strong>修改本地host文件</strong></p>
+<pre tabindex="0"><code>增加一行虚拟机ip    gitlab.example.com
+</code></pre><p><strong>web端访问</strong></p>
+<p>浏览器打开URL：gitlab.example.com</p>
+<p>进入之后需要设置第一次密码!！
+默认用户是root</p></article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/gitlab"><span class="tag">Gitlab</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>1292</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>

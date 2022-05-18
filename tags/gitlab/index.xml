@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>gitlab on SHUNCON</title>
+    <link>/tags/gitlab/</link>
+    <description>Recent content in gitlab on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+    <lastBuildDate>Sat, 03 Nov 2018 10:13:38 +0800</lastBuildDate><atom:link href="/tags/gitlab/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Gitlab安装部署</title>
+      <link>/post/gitlab/</link>
+      <pubDate>Sat, 03 Nov 2018 10:13:38 +0800</pubDate>
+      
+      <guid>/post/gitlab/</guid>
+      <description>&lt;p&gt;&lt;strong&gt;GitLab是什么&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitLab是一个开源版本控制系统，开发语言是Ruby。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab和GitHub的区别&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。
+  GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。
+&lt;/code&gt;&lt;/pre&gt;</description>
+    </item>
+    
+  </channel>
+</rss>

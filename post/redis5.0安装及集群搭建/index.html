@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>Redis5.0安装及集群搭建</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="安装依赖
+#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c&#43;&#43; –y
+#yum groupinstall &#39;Development Tools&#39;
+编译redis
+官网地址：https://redis.io/ 本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建#tar xf redis-5.0.0.tar.gz
+#cd redis-5.0.0
+#make MALLOC=lib
+#make install 直至此步完成编译。
+创建节点
+#mkdir -p /usr/local/redis
+#cd /usr/local/redis
+#mkdir 25001 25002 25003 25004 25005 25006
+配置文件
+#注：所有节点配置均使用同样的配置文件#vim /usr/local/redis/25001/redis.confdaemonize yespidfile /usr/local/redis/25001/redis_25001.pid port 25001tcp-backlog 511#开启集群cluster-enabled yescluster-config-file nodes.confcluster-node-timeout 5000appendonly yes#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用bind 10.0.18.134timeout 0tcp-keepalive 0loglevel noticelogfile &amp;quot;/usr/local/redis/25001/logs/redis.">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="Redis5.0安装及集群搭建">
+    <meta name="twitter:description" content="安装依赖
+#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c&#43;&#43; –y
+#yum groupinstall &#39;Development Tools&#39;
+编译redis
+官网地址：https://redis.io/ 本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建#tar xf redis-5.0.0.tar.gz
+#cd redis-5.0.0
+#make MALLOC=lib
+#make install 直至此步完成编译。
+创建节点
+#mkdir -p /usr/local/redis
+#cd /usr/local/redis
+#mkdir 25001 25002 25003 25004 25005 25006
+配置文件
+#注：所有节点配置均使用同样的配置文件#vim /usr/local/redis/25001/redis.confdaemonize yespidfile /usr/local/redis/25001/redis_25001.pid port 25001tcp-backlog 511#开启集群cluster-enabled yescluster-config-file nodes.confcluster-node-timeout 5000appendonly yes#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用bind 10.0.18.134timeout 0tcp-keepalive 0loglevel noticelogfile &amp;quot;/usr/local/redis/25001/logs/redis.">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="Redis5.0安装及集群搭建">
+  <meta property="og:description" content="安装依赖
+#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c&#43;&#43; –y
+#yum groupinstall &#39;Development Tools&#39;
+编译redis
+官网地址：https://redis.io/ 本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建#tar xf redis-5.0.0.tar.gz
+#cd redis-5.0.0
+#make MALLOC=lib
+#make install 直至此步完成编译。
+创建节点
+#mkdir -p /usr/local/redis
+#cd /usr/local/redis
+#mkdir 25001 25002 25003 25004 25005 25006
+配置文件
+#注：所有节点配置均使用同样的配置文件#vim /usr/local/redis/25001/redis.confdaemonize yespidfile /usr/local/redis/25001/redis_25001.pid port 25001tcp-backlog 511#开启集群cluster-enabled yescluster-config-file nodes.confcluster-node-timeout 5000appendonly yes#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用bind 10.0.18.134timeout 0tcp-keepalive 0loglevel noticelogfile &amp;quot;/usr/local/redis/25001/logs/redis.">
+  <meta property="og:url" content="/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">Redis5.0安装及集群搭建</h1>
+      <p class="post-meta">@SHUNCON · Nov 10, 2018 · 3 min read</p>
+    </header>
+    <article class="post-content"><p><strong>安装依赖</strong></p>
+<p><code>#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c++ –y</code></p>
+<p><code>#yum groupinstall 'Development Tools'</code></p>
+<p><strong>编译redis</strong></p>
+<pre tabindex="0"><code>官网地址：https://redis.io/   
+本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.
+而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建
+</code></pre><p><code>#tar xf redis-5.0.0.tar.gz</code></p>
+<p><code>#cd redis-5.0.0</code></p>
+<p><code>#make MALLOC=lib</code></p>
+<p><code>#make install </code>直至此步完成编译。</p>
+<p><strong>创建节点</strong></p>
+<p><code>#mkdir -p /usr/local/redis</code></p>
+<p><code>#cd /usr/local/redis</code></p>
+<p><code>#mkdir 25001  25002 25003 25004 25005 25006</code></p>
+<p><strong>配置文件</strong></p>
+<pre><code>#注：所有节点配置均使用同样的配置文件
+#vim /usr/local/redis/25001/redis.conf
+daemonize yes
+pidfile /usr/local/redis/25001/redis_25001.pid 
+port 25001
+tcp-backlog 511
+#开启集群
+cluster-enabled  yes
+cluster-config-file  nodes.conf
+cluster-node-timeout   5000
+appendonly yes
+#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用
+bind 10.0.18.134
+timeout 0
+tcp-keepalive 0
+loglevel notice
+logfile &quot;/usr/local/redis/25001/logs/redis.log&quot; #需手动创建该文件
+databases 16
+save 9001
+
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+dir /usr/local/redis/25001/
+slave-serve-stale-data yes
+slave-read-only yes
+repl-diskless-sync no
+repl-diskless-sync-delay 5
+repl-disable-tcp-nodelay no
+slave-priority 100
+
+appendfilename &quot;appendonly.aof&quot;  #数据AOF持久化配置
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-load-truncated yes
+lua-time-limit 5000
+slowlog-log-slower-than 10000
+slowlog-max-len 128
+latency-monitor-threshold 0
+notify-keyspace-events &quot;&quot;
+hash-max-ziplist-entries 512
+hash-max-ziplist-value 64
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+zset-max-ziplist-entries 128
+zset-max-ziplist-value 64
+hll-sparse-max-bytes 3000
+activerehashing yes
+client-output-buffer-limit normal 0 0 0
+client-output-buffer-limit slave 256mb 64mb 60
+client-output-buffer-limit pubsub 32mb 8mb 60
+hz 10
+aof-rewrite-incremental-fsync yes
+</code></pre>
+<p>同步其余5个节点目录#</p>
+<p><code>cp -ra 25001/redis.conf    25002/  #以此类推到剩下的节点</code>
+<code>#chmod 755 2500* </code>  #赋予权限
+<code>使用VIM快速更改其他其余节点的端口</code>
+<code>#vim 25002/redis.conf</code>
+<code>%s/25001/25002/g  </code>#vim的命令模式操作，剩下4个节点也是这样，更改后wq保存即可。</p>
+<p><strong>启动与关闭</strong></p>
+<p>启动
+<code>redis-server /usr/local/redis/25001/redis.conf #以此类推到其他启动2500x节点</code>
+关闭
+<code>redis-cli -p 25001 shutdown </code> #以此类推到其他关闭2500x节点,或者通过正则pkill redis 来杀进程 多杀几次</p>
+<p><strong>查看端口</strong></p>
+<p><code>netstat -tlnp |grep redis</code></p>
+<p><strong>创建集群</strong></p>
+<pre><code>这里先解释一下redis-cli用法：
+redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+--cluster-replicas 1
+这里使用的命令是create，因为我们要创建一个新的集群。该选项--cluster-replicas 1意味着我们希望每个创建的主服务器都有一个从服 其他参数是我要用于创建新集群的实例的地址列表。
+显然，我们要求的唯一设置是创建一个包含3个主服务器和3个从服务器的集群。
+Redis-cli将为您提供配置。键入yes接受建议的配置。将配置并加入群集，这意味着实例将被引导为彼此通信。最后，如果一切顺利，你会看到这样的消息：
+[OK] All 16384 slots covered
+
+[root@shunconf redis]# redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+ --cluster-replicas 1
+&gt;&gt;&gt; Performing hash slots allocation on 6 nodes...
+Master[0] -&gt; Slots 0 - 5460
+Master[1] -&gt; Slots 5461 - 10922
+Master[2] -&gt; Slots 10923 - 16383
+Adding replica 10.0.18.134:25004 to 10.0.18.134:25001
+Adding replica 10.0.18.134:25005 to 10.0.18.134:25002
+Adding replica 10.0.18.134:25006 to 10.0.18.134:25003
+&gt;&gt;&gt; Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25004
+   replicates 2f9af809b5684744a1f0b6f2717679a4eb22f6ba
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25005
+   replicates 3dc7d725e5cde621baa4e50b3848c033d7fd0173
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+Can I set the above configuration? (type 'yes' to accept): yes    #输入yes
+&gt;&gt;&gt; Nodes configuration updated
+&gt;&gt;&gt; Assign a different config epoch to each node
+&gt;&gt;&gt; Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+...
+&gt;&gt;&gt; Performing Cluster Check (using node 10.0.18.134:25001)
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   slots: (0 slots) slave
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+&gt;&gt;&gt; Check for open slots...
+&gt;&gt;&gt; Check slots coverage...
+[OK] All 16384 slots covered. #成功创建群集
+</code></pre>
+<p>检查集群</p>
+<pre><code># redis-cli -c -p 25001 -h 10.0.18.134
+10.0.18.134:25001&gt; cluster info #检查集群命令
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:4
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:424
+cluster_stats_messages_pong_sent:458
+cluster_stats_messages_sent:882
+cluster_stats_messages_ping_received:453
+cluster_stats_messages_pong_received:423
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:881
+</code></pre>
+</article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/redis"><span class="tag">Redis</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>1285</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>

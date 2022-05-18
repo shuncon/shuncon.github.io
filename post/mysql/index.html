@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>MySQL基本操作</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;lsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="MySQL基本操作">
+    <meta name="twitter:description" content="这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;lsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="MySQL基本操作">
+  <meta property="og:description" content="这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;lsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示">
+  <meta property="og:url" content="/post/mysql/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/mysql/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">MySQL基本操作</h1>
+      <p class="post-meta">@SHUNCON · Jan 1, 0001 · 2 min read</p>
+    </header>
+    <article class="post-content"><p>这段时间重新学习了一下mysql的增删查改。
+登录：mysql -uroot -pshunconf
+mysql设置密码：
+mysqladmin -u root -p shunconf
+mysql修改密码：
+mysqladmin -u root -p shunconf passwd ‘shunshun’
+改完密码后，重新启动mysql并登录</p>
+<p>sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下：
+help show；</p>
+<p>select user(); 查看当前登录用户
+show 命令：
+show databases；  查看库
+show databases like “zabbix”； 查看指定库
+show databases like &lsquo;%za%&rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号</p>
+<p>grant授权命令：
+GRANT ALL ON mysql.* TO &lsquo;shun&rsquo;@&lsquo;localhost&rsquo; IDENTIFIED BY &lsquo;PASSWD&rsquo;; #创建用户并授权，其中mysql.*是库名</p>
+<p>create创建数据库
+create database shun1; 创建一个名为shun的库</p>
+<p>create和grant结合使用
+create user shun2@localhost identified by &lsquo;shunconf&rsquo;；
+grant all on privileges shun.* to shun2@localhost；
+show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示</p>
+<p>drop删除数据库
+drop database shun1；删除指定库
+drop table users; 删除指定表</p>
+<p>查看库的字符集为utf-8
+show create database shun；查看库字符集
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| Database | Create Database                                               |
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| shun     | CREATE DATABASE <code>shun</code> /*!40100 DEFAULT CHARACTER SET utf8 */ | #为utf-8
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+创建指定字符集如下
+CREATE DATABASE <code>shun1</code> DEFAULT CHARACTER SET gbk; 通过查看库的字符集可以得到命令，简单修改即可使用</p>
+<p>字符集：
+字符集是来定义mysql字符串的存储方式，校对规则则是定义了比较字符串的方式</p>
+<p>select查看数据库连接数
+select user,host from mysql.user 查看连接数</p>
+<p>use切换数据库
+use shun；相当于linux的cd
+select database(); 查看是否已经进入shun库
+show tables; 查看shun库中的表</p>
+<p>system跳出数据库执行linux如下：
+system ls / 执行并显示命令结果后回到mysql</p>
+<p>表操作：
+show create table test \G 查看test建表用的语句
+desc test； 查看表结构
+建立test表
+create table test(
+id int(4) not null primary key auto_increment, 设置键值4，not null为禁止为空 primary key定义唯一
+name char(20) not null 设置表长度为20
+);
+再创建一个表：
+create table test1(
+name char(20) not null primary key,
+age int(3) not null
+);</p>
+<p>向test表里插入数据：
+insert into test values（1，‘shun’）；
+insert into test(name) values(&lsquo;shunconf&rsquo;); 向指定列名插入数据，不需要输入id（自动生成id）
+insert into test(id,name) values(11,&lsquo;zhazha&rsquo;),(12,&lsquo;heheda&rsquo;) 批量插入数据
+insert into test(name) values(&lsquo;1234&rsquo;),(&lsquo;4567&rsquo;); 批量插入数据
+查询表：
+select * from test;
+select * from test where name=&lsquo;shun2&rsquo; 查看表里指定数据
+select * from test limit 2；显示查询数据为2行
+select * from test order by id limit 5 查询数据为倒序5行
+select * from test order by id limit 4 查询数据为升序5行
+select * from test where id&lt;3; 查询数据id小于3 反之使用&gt;3的
+select * from test  where id &gt;6 adn id&lt;8 判断ID大于6 而小于8的数据
+select * from test  where id  &gt;4 or id &lt;6
+and 和 or 参数为：前者and是交集，后者or则为并集
+多表查询：
+select * from test,test1 where test.name=test1.name; 查询test test1这2张表相同的name</p>
+<p>更改表中字段数据
+update test1 set name=&lsquo;shunconf&rsquo; where name=&lsquo;shun11&rsquo;;修改表中的数据将set name=&lsquo;shunconf&rsquo; 以where判断表中存在name为shun11 进行修改成shunconf</p>
+<p>alter添加字段
+alter table test add sex char(4)； 添加sex字段
+alter table test add age int(4) after name; 在name字段后面添加age列</p>
+<p>删除字段
+alter table test drop sex；将test表中的sex字段删除</p>
+<p>删除表中的数据
+delete from test where id =3; 删除表中id等于3的数据 可以使用&lt; &gt;  % 大于号、小于号、百分号来匹配
+delete from test where  name=&lsquo;shun1&rsquo;删除表中name等于shun的数据</p>
+<p>清空表数据
+truncate table test；</p>
+<p>修改表名
+rename table test1 to test0； 将test1表名改成test0</p>
+<p>set变量
+set names gbk；将表的name设置支持中文
+insert into test(name) values(&lsquo;顺&rsquo;)</p>
+<p>mysqldump备份数据库
+mysql -uroot -p&rsquo;shunconf&rsquo; -S /var/lib/mysql/mysql.sock -B zabbix &gt;/tmp/zabbixsqlbak.sql 在sheel下执行 以zabbix库为备份，备份时需要根据mysql.sock路径，-B参数指定备份那个库</p>
+<p>mysqldump恢复数据库
+mysqldump -uroot -p&rsquo;shunconf' -S /var/lib/mysql/mysql.sock &lt; /tmp/zabbixbak.sql</p>
+<p>查看数据库状态
+mysql -uroot -p&rsquo;shunconf' -e &lsquo;show processlist&rsquo;</p>
+<p>mysql存储引擎
+INNODB 和MySAM是最主流的两个存储引擎，现在数据库版本默认的存储引擎是InnoDB.
+InnoDB 特性：
+事务的支持：     支持事务
+锁粒度：    行锁
+并发性：高并发
+构成结构和缓存机制：数据和索引文件都存在.idb文件里，并都缓存在内存里
+select count(<em>) ：需要扫描全表，统计所有行数。
+MySAM  特性：
+事务的支持：   不支持事务
+锁粒度：      表锁
+构成结构和缓存机制：数据文件的扩展名为.myd(MYData)
+索引文件的扩展名是.myi(MYIndex)
+只缓存索引文件，不缓存数据文件
+select count(</em>) ： 只需要从计数器中读出保存好的行数即可</p>
+<pre tabindex="0"><code>
+</code></pre></article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/mysql"><span class="tag">MySQL</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>738292</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>

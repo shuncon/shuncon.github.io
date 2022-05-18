@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>tomcat必备知识点</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="tomcat隐藏版本信息
+1.进入tomcat的lib目录找到catalina.jar文件
+unzip catalina.jar 得到两个文件夹： META-INF org
+编辑org中的文件
+vim org/apache/catalina/util/ServerInfo.properties
+server.info=Win IISserver.number=0.0.0.0server.built=Apr 3 2018 20:04:09 UTC改成这样的重新打包更新jar的文件内容
+cd /tomcat/lib#jar uvf catalina.jar org/apache/catalina/util/ServerInfo.properties增加tomcat使用内存量
+ vim bin/catalina.sh cygwin=false #在此行上面添加以下代码set JAVA_OPTS=-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:MaxPermSize=256m解析一下内存参数：
+ -Xms512m 内存最小使用，-Xmx1024m内存最大使用tomcat优化参数：
+#第一部分：&amp;lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&amp;gt;&amp;lt;Server port=&amp;quot;9090&amp;quot; shutdown=&amp;quot;SHUTDOWN&amp;quot;&amp;gt; #此处自定义为9090&amp;lt;Connector port=&amp;quot;9091&amp;quot; protocol=&amp;quot;HTTP/1.1&amp;quot; #此处自定义为9091maxThreads=&amp;quot;1000&amp;quot;minSpareThreads=&amp;quot;200&amp;quot;maxSpareThreads=&amp;quot;800&amp;quot;acceptCount=&amp;quot;1100&amp;quot;connectionTimeout=&amp;quot;60000&amp;quot;redirectPort=&amp;quot;8402&amp;quot;executor=&amp;quot;tomcatThreadPool&amp;quot;debug=&amp;quot;0&amp;quot;enableLookups=&amp;quot;false&amp;quot;disableUploadTimeout=&amp;quot;true&amp;quot;URIEncoding=&amp;quot;UTF-8&amp;quot;useBodyEncodingForURI=&amp;quot;true&amp;quot;#第二部分：指定网站首页JSP、JS等文件存放位置&amp;lt;Context docBase=&amp;quot;/data/www/shunconf/webroot&amp;quot; path=&amp;quot;&amp;quot; reloadable=&amp;quot;false&amp;quot; debug=&amp;quot;0&amp;quot;&amp;gt;&amp;lt;/Context&amp;gt; 定义网站代码存放的路径">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="tomcat必备知识点">
+    <meta name="twitter:description" content="tomcat隐藏版本信息
+1.进入tomcat的lib目录找到catalina.jar文件
+unzip catalina.jar 得到两个文件夹： META-INF org
+编辑org中的文件
+vim org/apache/catalina/util/ServerInfo.properties
+server.info=Win IISserver.number=0.0.0.0server.built=Apr 3 2018 20:04:09 UTC改成这样的重新打包更新jar的文件内容
+cd /tomcat/lib#jar uvf catalina.jar org/apache/catalina/util/ServerInfo.properties增加tomcat使用内存量
+ vim bin/catalina.sh cygwin=false #在此行上面添加以下代码set JAVA_OPTS=-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:MaxPermSize=256m解析一下内存参数：
+ -Xms512m 内存最小使用，-Xmx1024m内存最大使用tomcat优化参数：
+#第一部分：&amp;lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&amp;gt;&amp;lt;Server port=&amp;quot;9090&amp;quot; shutdown=&amp;quot;SHUTDOWN&amp;quot;&amp;gt; #此处自定义为9090&amp;lt;Connector port=&amp;quot;9091&amp;quot; protocol=&amp;quot;HTTP/1.1&amp;quot; #此处自定义为9091maxThreads=&amp;quot;1000&amp;quot;minSpareThreads=&amp;quot;200&amp;quot;maxSpareThreads=&amp;quot;800&amp;quot;acceptCount=&amp;quot;1100&amp;quot;connectionTimeout=&amp;quot;60000&amp;quot;redirectPort=&amp;quot;8402&amp;quot;executor=&amp;quot;tomcatThreadPool&amp;quot;debug=&amp;quot;0&amp;quot;enableLookups=&amp;quot;false&amp;quot;disableUploadTimeout=&amp;quot;true&amp;quot;URIEncoding=&amp;quot;UTF-8&amp;quot;useBodyEncodingForURI=&amp;quot;true&amp;quot;#第二部分：指定网站首页JSP、JS等文件存放位置&amp;lt;Context docBase=&amp;quot;/data/www/shunconf/webroot&amp;quot; path=&amp;quot;&amp;quot; reloadable=&amp;quot;false&amp;quot; debug=&amp;quot;0&amp;quot;&amp;gt;&amp;lt;/Context&amp;gt; 定义网站代码存放的路径">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="tomcat必备知识点">
+  <meta property="og:description" content="tomcat隐藏版本信息
+1.进入tomcat的lib目录找到catalina.jar文件
+unzip catalina.jar 得到两个文件夹： META-INF org
+编辑org中的文件
+vim org/apache/catalina/util/ServerInfo.properties
+server.info=Win IISserver.number=0.0.0.0server.built=Apr 3 2018 20:04:09 UTC改成这样的重新打包更新jar的文件内容
+cd /tomcat/lib#jar uvf catalina.jar org/apache/catalina/util/ServerInfo.properties增加tomcat使用内存量
+ vim bin/catalina.sh cygwin=false #在此行上面添加以下代码set JAVA_OPTS=-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:MaxPermSize=256m解析一下内存参数：
+ -Xms512m 内存最小使用，-Xmx1024m内存最大使用tomcat优化参数：
+#第一部分：&amp;lt;?xml version=&#39;1.0&#39; encoding=&#39;utf-8&#39;?&amp;gt;&amp;lt;Server port=&amp;quot;9090&amp;quot; shutdown=&amp;quot;SHUTDOWN&amp;quot;&amp;gt; #此处自定义为9090&amp;lt;Connector port=&amp;quot;9091&amp;quot; protocol=&amp;quot;HTTP/1.1&amp;quot; #此处自定义为9091maxThreads=&amp;quot;1000&amp;quot;minSpareThreads=&amp;quot;200&amp;quot;maxSpareThreads=&amp;quot;800&amp;quot;acceptCount=&amp;quot;1100&amp;quot;connectionTimeout=&amp;quot;60000&amp;quot;redirectPort=&amp;quot;8402&amp;quot;executor=&amp;quot;tomcatThreadPool&amp;quot;debug=&amp;quot;0&amp;quot;enableLookups=&amp;quot;false&amp;quot;disableUploadTimeout=&amp;quot;true&amp;quot;URIEncoding=&amp;quot;UTF-8&amp;quot;useBodyEncodingForURI=&amp;quot;true&amp;quot;#第二部分：指定网站首页JSP、JS等文件存放位置&amp;lt;Context docBase=&amp;quot;/data/www/shunconf/webroot&amp;quot; path=&amp;quot;&amp;quot; reloadable=&amp;quot;false&amp;quot; debug=&amp;quot;0&amp;quot;&amp;gt;&amp;lt;/Context&amp;gt; 定义网站代码存放的路径">
+  <meta property="og:url" content="/post/tomcat%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86%E7%82%B9/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/tomcat%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86%E7%82%B9/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">tomcat必备知识点</h1>
+      <p class="post-meta">@SHUNCON · Nov 17, 2018 · 1 min read</p>
+    </header>
+    <article class="post-content"><p><strong>tomcat隐藏版本信息</strong></p>
+<p>1.进入tomcat的lib目录找到catalina.jar文件</p>
+<p>unzip  catalina.jar 得到两个文件夹： <code>META-INF</code>     <code>org</code></p>
+<p>编辑org中的文件</p>
+<p>vim org/apache/catalina/util/ServerInfo.properties</p>
+<pre tabindex="0"><code>server.info=Win  IIS
+server.number=0.0.0.0
+server.built=Apr 3 2018 20:04:09 UTC
+改成这样的
+</code></pre><p>重新打包更新jar的文件内容</p>
+<pre tabindex="0"><code>cd  /tomcat/lib
+#jar uvf catalina.jar org/apache/catalina/util/ServerInfo.properties
+
+</code></pre><p><strong>增加tomcat使用内存量</strong></p>
+<pre tabindex="0"><code> vim bin/catalina.sh 
+ 
+ cygwin=false #在此行上面添加以下代码
+ set JAVA_OPTS=-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:MaxPermSize=256m
+
+</code></pre><p>解析一下内存参数：</p>
+<pre tabindex="0"><code> -Xms512m 内存最小使用，-Xmx1024m内存最大使用
+</code></pre><p><strong>tomcat</strong>优化参数：</p>
+<pre tabindex="0"><code>#第一部分：
+&lt;?xml version='1.0' encoding='utf-8'?&gt;
+&lt;Server port=&quot;9090&quot; shutdown=&quot;SHUTDOWN&quot;&gt;  #此处自定义为9090
+&lt;Connector port=&quot;9091&quot; protocol=&quot;HTTP/1.1&quot;   #此处自定义为9091
+                maxThreads=&quot;1000&quot;
+                minSpareThreads=&quot;200&quot;
+                maxSpareThreads=&quot;800&quot;
+                acceptCount=&quot;1100&quot;
+               connectionTimeout=&quot;60000&quot;
+               redirectPort=&quot;8402&quot;
+                executor=&quot;tomcatThreadPool&quot;
+                debug=&quot;0&quot;
+                enableLookups=&quot;false&quot;
+                disableUploadTimeout=&quot;true&quot;
+                URIEncoding=&quot;UTF-8&quot;
+                useBodyEncodingForURI=&quot;true&quot;
+#第二部分：
+指定网站首页JSP、JS等文件存放位置
+ &lt;Context docBase=&quot;/data/www/shunconf/webroot&quot; path=&quot;&quot; reloadable=&quot;false&quot;  debug=&quot;0&quot;&gt;
+       &lt;/Context&gt;  定义网站代码存放的路径
+
+</code></pre></article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/tomcat"><span class="tag">Tomcat</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>1278</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>

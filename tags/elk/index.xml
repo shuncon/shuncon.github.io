@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>ELK on SHUNCON</title>
+    <link>/tags/elk/</link>
+    <description>Recent content in ELK on SHUNCON</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright><atom:link href="/tags/elk/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ELK集群 部署</title>
+      <link>/post/elk-make/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/post/elk-make/</guid>
+      <description>ELK集群  环境  es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装es-node1 操作  安装   #yum -y install jre
+  #wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+  #tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/
+  创建相关目录   #mkdir -p /data/server/es/elasticsearch-6.6.1/logs #mkdir /data/es/data -p #数据存储目录
+  编辑配置文件   #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+ cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.</description>
+    </item>
+    
+  </channel>
+</rss>

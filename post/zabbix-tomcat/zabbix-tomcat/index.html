@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+  <meta charset="utf-8" />
+
+  
+  <title>zabbix监控tomcat</title>
+
+  
+  
+  <link href="//cdn.jsdelivr.net" rel="dns-prefetch">
+  <link href="//cdnjs.cloudflare.com" rel="dns-prefetch">
+  
+  <link href="//at.alicdn.com" rel="dns-prefetch">
+  
+  <link href="//fonts.googleapis.com" rel="dns-prefetch">
+  <link href="//fonts.gstatic.com" rel="dns-prefetch">
+  
+  
+  
+  <link href="//www.google-analytics.com" rel="dns-prefetch">
+  
+
+  
+
+  
+  <meta name="author" content="SHUNCON">
+  <meta name="description" content="版本  zabbix4.0前提条件 编译
+ 编译zabbix server时需要提供java支持，即添加--enable-java该选项。系统也要安装有jdk版本yum
+ yum -y install zabbix-java-gateway
+ 开始监控 修改zabbix_server.conf
+ vim/etc/zabbix/zabbix_server.conf
+  JavaGateway=10.0.18.118 //java网关地址，即server端ip地址JavaGatewayPort=10052 //网关端口，取消注释开启即可StartPollers=50StartPingers=100StartJavaPollers=5 开启java配置已经完成。 vim /etc/zabbix/zabbix_java_gateway.conf
+ LISTEN_IP=&amp;quot;0.0.0.0&amp;quot; #监听的IPLISTEN_PORT=10052 #监听的端口PID_FILE=&amp;quot;/var/run/zabbix/zabbix_java.pid&amp;quot; #pid保存路径START_POLLERS=5 #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况TIMEOUT=20 systemctl restart zabbix-server systemctl start zabbix-java-gatewa systemctl enable zabbix-java-gatewa 重启，即可
+ 修改客户端中的tomcat文件
+ vim bin/catalina.sh
+ JAVA_OPTS=&amp;quot;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;quot;//web端使用ipv4协议，默认使用ipv6CATALINA_OPTS=&amp;quot;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345 -Dcom.sun.management.jmxremote.ssl=false -Djava.">
+
+  
+  
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="@gohugoio">
+    <meta name="twitter:title" content="zabbix监控tomcat">
+    <meta name="twitter:description" content="版本  zabbix4.0前提条件 编译
+ 编译zabbix server时需要提供java支持，即添加--enable-java该选项。系统也要安装有jdk版本yum
+ yum -y install zabbix-java-gateway
+ 开始监控 修改zabbix_server.conf
+ vim/etc/zabbix/zabbix_server.conf
+  JavaGateway=10.0.18.118 //java网关地址，即server端ip地址JavaGatewayPort=10052 //网关端口，取消注释开启即可StartPollers=50StartPingers=100StartJavaPollers=5 开启java配置已经完成。 vim /etc/zabbix/zabbix_java_gateway.conf
+ LISTEN_IP=&amp;quot;0.0.0.0&amp;quot; #监听的IPLISTEN_PORT=10052 #监听的端口PID_FILE=&amp;quot;/var/run/zabbix/zabbix_java.pid&amp;quot; #pid保存路径START_POLLERS=5 #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况TIMEOUT=20 systemctl restart zabbix-server systemctl start zabbix-java-gatewa systemctl enable zabbix-java-gatewa 重启，即可
+ 修改客户端中的tomcat文件
+ vim bin/catalina.sh
+ JAVA_OPTS=&amp;quot;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;quot;//web端使用ipv4协议，默认使用ipv6CATALINA_OPTS=&amp;quot;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345 -Dcom.sun.management.jmxremote.ssl=false -Djava.">
+    <meta name="twitter:image" content="/images/avatar.png">
+  
+
+  
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="zabbix监控tomcat">
+  <meta property="og:description" content="版本  zabbix4.0前提条件 编译
+ 编译zabbix server时需要提供java支持，即添加--enable-java该选项。系统也要安装有jdk版本yum
+ yum -y install zabbix-java-gateway
+ 开始监控 修改zabbix_server.conf
+ vim/etc/zabbix/zabbix_server.conf
+  JavaGateway=10.0.18.118 //java网关地址，即server端ip地址JavaGatewayPort=10052 //网关端口，取消注释开启即可StartPollers=50StartPingers=100StartJavaPollers=5 开启java配置已经完成。 vim /etc/zabbix/zabbix_java_gateway.conf
+ LISTEN_IP=&amp;quot;0.0.0.0&amp;quot; #监听的IPLISTEN_PORT=10052 #监听的端口PID_FILE=&amp;quot;/var/run/zabbix/zabbix_java.pid&amp;quot; #pid保存路径START_POLLERS=5 #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况TIMEOUT=20 systemctl restart zabbix-server systemctl start zabbix-java-gatewa systemctl enable zabbix-java-gatewa 重启，即可
+ 修改客户端中的tomcat文件
+ vim bin/catalina.sh
+ JAVA_OPTS=&amp;quot;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;quot;//web端使用ipv4协议，默认使用ipv6CATALINA_OPTS=&amp;quot;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345 -Dcom.sun.management.jmxremote.ssl=false -Djava.">
+  <meta property="og:url" content="/post/zabbix-tomcat/zabbix-tomcat/">
+  <meta property="og:image" content="/images/avatar.png">
+
+
+
+
+<meta name="generator" content="Hugo 0.88.1">
+
+
+<link rel="canonical" href="/post/zabbix-tomcat/zabbix-tomcat/">
+
+<meta name="renderer" content="webkit">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="format-detection" content="telephone=no,email=no,adress=no">
+<meta http-equiv="Cache-Control" content="no-transform">
+
+
+<meta name="robots" content="index,follow">
+<meta name="referrer" content="origin-when-cross-origin">
+<meta name="google-site-verification" content="_moDmnnBNVLBN1rzNxyGUGdPHE20YgbmrtzLIbxaWFc">
+<meta name="msvalidate.01" content="22596E34341DD1D17D6022C44647E587">
+
+
+
+
+
+<meta name="theme-color" content="#02b875">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="SHUNCON">
+<meta name="msapplication-tooltip" content="SHUNCON">
+<meta name='msapplication-navbutton-color' content="#02b875">
+<meta name="msapplication-TileColor" content="#02b875">
+<meta name="msapplication-TileImage" content="/icons/icon-144x144.png">
+<link rel="icon" href="/favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="/icons/icon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/icon-32x32.png">
+<link rel="icon" sizes="192x192" href="/icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+<link rel="manifest" href="/manifest.json">
+
+
+<link rel="preload" href="/styles/main-rendered.min.css" as="style">
+
+
+<link rel="preload" href="https://fonts.googleapis.com/css?family=Lobster" as="style">
+<link rel="preload" href="/images/avatar.png" as="image">
+<link rel="preload" href="/images/grey-prism.svg" as="image">
+
+
+<style>
+  body {
+    background: rgb(244, 243, 241) url('/images/grey-prism.svg') repeat fixed;
+  }
+</style>
+<link rel="stylesheet" href="/styles/main-rendered.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lobster">
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/medium-zoom@1.0.2/dist/medium-zoom.min.js"></script>
+
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video-js.min.css">
+
+
+
+  
+  
+<!--[if lte IE 8]>
+  <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ie8@1.1.2/dist/videojs-ie8.min.js"></script>
+<![endif]-->
+
+<!--[if lte IE 9]>
+  <script src="https://cdn.jsdelivr.net/npm/eligrey-classlist-js-polyfill@1.2.20180112/classList.min.js"></script>
+<![endif]-->
+
+
+</head>
+  <body>
+    <div class="suspension">
+      <a role="button" aria-label="Go to top" title="Go to top" class="to-top is-hide"><span class="icon icon-up" aria-hidden="true"></span></a>
+      
+        
+      
+    </div>
+    
+    
+  <header class="site-header">
+  <a href=""><img class="avatar" src="/images/avatar.png" alt="Avatar"></a>
+  
+  <h2 class="title"><a href="">SHUNCON</a></h2>
+  
+  <p class="subtitle">我本微末凡尘,可也心向天空!</p>
+  <button class="menu-toggle" type="button" aria-label="Main Menu" aria-expanded="false" tab-index="0">
+    <span class="icon icon-menu" aria-hidden="true"></span>
+  </button>
+
+  <nav class="site-menu collapsed">
+    <h2 class="offscreen">Main Menu</h2>
+    <ul class="menu-list">
+      
+      
+      
+      
+        <li class="menu-item
+          
+          
+           is-active">
+          <a href="/">首页</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/tags/">类别标签</a>
+        </li>
+      
+        <li class="menu-item
+          
+          
+          ">
+          <a href="/about/">关于我</a>
+        </li>
+      
+    </ul>
+  </nav>
+  <nav class="social-menu collapsed">
+    <h2 class="offscreen">Social Networks</h2>
+    <ul class="social-list"><li class="social-item">
+          <a href="mailto:1428834423@qq.com" title="Email" aria-label="Email">
+            <span class="icon icon-email" aria-hidden="true"></span>
+          </a>
+        </li><li class="social-item">
+          <a href="/images/qrcode.jpg" rel="me" title="Wechat" aria-label="Wechat">
+            <span class="icon icon-wechat" aria-hidden="true"></span>
+          </a>
+        </li></ul>
+  </nav>
+</header>
+
+  <section class="main post-detail">
+    <header class="post-header">
+      <h1 class="post-title">zabbix监控tomcat</h1>
+      <p class="post-meta">@SHUNCON · Dec 10, 2018 · 1 min read</p>
+    </header>
+    <article class="post-content"><h2 id="版本">版本</h2>
+<pre tabindex="0"><code>  zabbix4.0
+</code></pre><h2 id="前提条件">前提条件</h2>
+<p><strong>编译</strong></p>
+<pre tabindex="0"><code> 编译zabbix server时需要提供java支持，即添加--enable-java该选项。
+ 系统也要安装有jdk版本
+</code></pre><p><strong>yum</strong></p>
+<blockquote>
+<p>yum -y install zabbix-java-gateway</p>
+</blockquote>
+<h2 id="开始监控">开始监控</h2>
+<p><strong>修改zabbix_server.conf</strong></p>
+<blockquote>
+<p>vim/etc/zabbix/zabbix_server.conf</p>
+</blockquote>
+<pre tabindex="0"><code> JavaGateway=10.0.18.118   //java网关地址，即server端ip地址
+ JavaGatewayPort=10052     //网关端口，取消注释开启即可
+ StartPollers=50
+ StartPingers=100
+ StartJavaPollers=5 
+ 开启java配置已经完成。
+</code></pre><blockquote>
+<p>vim /etc/zabbix/zabbix_java_gateway.conf</p>
+</blockquote>
+<pre tabindex="0"><code>LISTEN_IP=&quot;0.0.0.0&quot; #监听的IP
+LISTEN_PORT=10052 #监听的端口
+PID_FILE=&quot;/var/run/zabbix/zabbix_java.pid&quot; #pid保存路径
+START_POLLERS=5  #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况
+TIMEOUT=20
+
+</code></pre><blockquote>
+<p>systemctl restart zabbix-server
+systemctl start  zabbix-java-gatewa
+systemctl enable  zabbix-java-gatewa
+重启，即可</p>
+</blockquote>
+<p><strong>修改客户端中的tomcat文件</strong></p>
+<blockquote>
+<p>vim bin/catalina.sh</p>
+</blockquote>
+<pre tabindex="0"><code>JAVA_OPTS=&quot;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &quot;
+//web端使用ipv4协议，默认使用ipv6
+CATALINA_OPTS=&quot;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345  -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=10.0.18.117&quot;
+端口对应为12345，ip为tomcat服务器的IP
+</code></pre><blockquote>
+<p>wget <a href="http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar">http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar</a></p>
+</blockquote>
+<p>对应apache-tomcat-8.5.38的</p>
+<blockquote>
+<p>wget <a href="https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar">https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar</a></p>
+</blockquote>
+<p>下载这两个jar包到apache-tomcat-8.5.38/lib/目录下</p>
+<blockquote>
+<p>../bin/shutdown.sh &amp;&amp;  ../bin/start.sh</p>
+</blockquote>
+<blockquote>
+<p>systemctl restart zabbix-agent</p>
+</blockquote>
+<h2 id="zabbix-server-web操作">zabbix server WEB操作：</h2>
+<p><strong>添加jmx</strong>
+<img src="1.png" alt="1"></p>
+<p><strong>添加模板：</strong>
+<img src="2.png" alt="2">
+<img src="3.png" alt="3">
+<img src="4.png" alt="4">
+Emmm  只能有数据的图给了，自己搭来学习，没那么多访问。。。</p>
+</article>
+    <footer class="post-footer">
+      
+      <ul class="post-tags">
+        
+          <li><a href="/tags/zabbix"><span class="tag">Zabbix</span></a></li>
+        
+          <li><a href="/tags/tomcat"><span class="tag">Tomcat</span></a></li>
+        
+      </ul>
+      
+      <p class="post-copyright">
+        © This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.This post was published <strong>1255</strong> days ago, content in the post may be inaccurate, even wrong now, please take risk yourself.
+      </p>
+    </footer>
+    
+      
+    
+  </section>
+  
+<footer class="site-footer">
+  <p>© 2017-2022 SHUNCON</p>
+  <p>Powered by <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> with theme <a href="https://github.com/laozhu/hugo-nuo" target="_blank" rel="noopener">Nuo</a>.</p>
+  
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/smooth-scroll@15.0.0/dist/smooth-scroll.min.js"></script>
+
+
+
+<script async src="https://cdn.jsdelivr.net/npm/video.js@7.3.0/dist/video.min.js"></script>
+
+
+
+
+<script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [['$','$'], ['\\(','\\)']],
+      displayMath: [['$$','$$'], ['\\[','\\]']],
+      processEscapes: true,
+      processEnvironments: true,
+      skipTags: ['script', 'noscript', 'style', 'textarea', 'pre'],
+      TeX: { equationNumbers: { autoNumber: "AMS" },
+      extensions: ["AMSmath.js", "AMSsymbols.js"] }
+    },
+  });
+</script>
+<script type="text/x-mathjax-config">
+  // Fix <code> tags after MathJax finishes running. This is a
+  // hack to overcome a shortcoming of Markdown. Discussion at
+  // https://github.com/mojombo/jekyll/issues/199
+  MathJax.Hub.Queue(() => {
+    MathJax.Hub.getAllJax().map(v => v.SourceElement().parentNode.className += ' has-jax');
+  });
+</script>
+
+
+
+<script src="/scripts/index.min.js"></script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('\/service-worker.js').then(function() {
+      console.log('[ServiceWorker] Registered');
+    });
+  }
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+
+
+
+
+
+
+  </body>
+</html>
