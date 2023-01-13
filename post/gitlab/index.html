@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='GitLab是什么
+GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 '>
+<title>Gitlab安装部署</title>
+
+<link rel='canonical' href='/post/gitlab/'>
+
+<link rel="stylesheet" href="/scss/style.min.8191399262444ab68b72a18c97392f5349be20a1615d77445be51e974c144cff.css"><meta property='og:title' content='Gitlab安装部署'>
+<meta property='og:description' content='GitLab是什么
+GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 '>
+<meta property='og:url' content='/post/gitlab/'>
+<meta property='og:site_name' content='SHUNCON'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='gitlab' /><meta property='article:published_time' content='2018-11-03T10:13:38&#43;08:00'/><meta property='article:modified_time' content='2018-11-03T10:13:38&#43;08:00'/>
+<meta name="twitter:title" content="Gitlab安装部署">
+<meta name="twitter:description" content="GitLab是什么
+GitLab是一个开源版本控制系统，开发语言是Ruby。 GitLab和GitHub的区别
+GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。 GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。 ">
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "dark");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column compact"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_huea65508e98018a10b4aa6280b3a1eb6c_5801_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">SHUNCON</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>类别标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/about/' >
+                
+                
+                
+                <span>关于我</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/post/gitlab/">Gitlab安装部署</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">Nov 03, 2018</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    2 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <p><strong>GitLab是什么</strong></p>
+<pre tabindex="0"><code>  GitLab是一个开源版本控制系统，开发语言是Ruby。
+</code></pre><p><strong>GitLab和GitHub的区别</strong></p>
+<pre tabindex="0"><code>  GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。
+  GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。
+</code></pre><p><strong>GitLab优势</strong></p>
+<pre tabindex="0"><code>   开源免费、差异化的版本管理和同步,GUI界面操作和强大的用户权限管理
+   集成度高，能集成绝大开发工具,支持内置HA，保证高并发的稳定.
+</code></pre><p><strong>GitLab主要服务构成</strong></p>
+<pre tabindex="0"><code>Nginx轻量级web服务器、gitlab-workharse轻量级的反向代理服务、
+gitlab shell用于处理git命令和修改authorized key列表。
+logrotate日志文件管理工具
+</code></pre><p><strong>gitlab工作流程</strong></p>
+<pre tabindex="0"><code>1.创建项目并克隆
+2.创建项目某featuref分支
+3.编写代码并提交至该分支
+4.推送该项目代码到远程gitlab分支服务器
+5.进行代码检查并提交master主分支合并申请
+6.项目领导审查代码并确认合并申请
+</code></pre><p><strong>gitlab社区版安装</strong></p>
+<p><code>#yum -y install curl policycoreutils  openssh‐server  openssh‐clients  postfix</code></p>
+<p>使用官方源安装时间过长可以使用以下清华源：</p>
+<pre tabindex="0"><code>vim /etc/yum.repos.d/gitlab-ce.repo
+[gitlab-ce]
+name=gitlab-ce
+baseurl=http://mirrors.tuna.tsinghua.edu.cn/gitlab-ce/yum/el7
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+
+后使用yum makecache生成yum缓存
+</code></pre><p>安装</p>
+<p><code>yum -y install gitlab-ce</code></p>
+<p><strong>启动postfix</strong></p>
+<p><code>systemctl start postfix &amp;&amp;systemctl enable postfix</code></p>
+<p><strong>创建本地gitlat SSL证书</strong></p>
+<p><code>#mkdir-p /etc/gitlab/ssl</code></p>
+<p>本地密钥生成、签署证书生成、pem证书生成：</p>
+<pre tabindex="0"><code>#openssl genrsa -out &#34;/etc/gitlab/ssl/gitlab.example.com.key&#34; 2048
+#openssl req -new -key &#34;/etc/gitlab/ssl/gitlab.example.com.key&#34; -out &#34;/etc/gitlab/ssl/gitlab.example.com.csr&#34;
+省略部分
+-----
+Country Name (2 letter code) [XX]: 回车即可
+State or Province Name (full name) []:回车即可
+Locality Name (eg, city) [Default City]:回车即可
+Organization Name (eg, company) [Default Company Ltd]:回车即可
+Organizational Unit Name (eg, section) []:回车即可
+Common Name (eg, your name or your server&#39;s hostname) []:gitlab.example.com
+Email Address []:admin@example.com 
+
+Please enter the following &#39;extra&#39; attributes
+to be sent with your certificate request
+A challenge password []:123456 
+An optional company name []: 回车即可
+
+签署证书生成：
+#openssl  x509 -req -days 365 -in &#34;/etc/gitlab/ssl/gitlab.example.com.csr&#34;  -signkey &#34;/etc/gitlab/ssl/gitlab.example.com.key&#34; -out &#34;/etc/gitlab/ssl/gitlab.example.com.crt&#34;
+显示结果：
+Signature ok
+subject=/C=XX/L=Default City/O=Default Company Ltd/CN=gitlab.example.com/emailAddress=admin@example.com
+Getting Private key
+PEM证书生成：
+#openssl  dhparam -out /etc/gitlab/ssl/dhparams.pem  2048
+生成证书时间挺久的 Emmmm...
+
+#ll /etc/gitlab/ssl/ 查看证书是否生成4个证书文件
+#chmod 600 /etc/gitlab/ssl/* 赋予600权限
+</code></pre><p><strong>修改gitlab.rb</strong>
+<code>vim /etc/gitlab/gitlab.rb</code></p>
+<pre tabindex="0"><code>找到external_url &#39;https://gitlab.example.com/&#39; 将http改为https
+
+找到 redirect_http_to_https
+修改 nginx [&#39;redirect_http_to_https&#39;] =true 将所有http请求转发到
+https
+
+找到ssl_certificate
+修改 nginx [&#39;ssl_certificate&#39;] =&#34;/etc/gitlab/ssl/gitlab.example.com.crt&#34;
+
+修改nginx [&#39;ssl_certificate_key&#39;] =&#34;/etc/gitlab/ssl/gitlab.example.com.key&#34;
+
+修改nginx [&#39;ssl_dhparam&#39;] = &#34;/etc/gitlab/ssl/dhparams.pem&#34;
+</code></pre><p><code>gitlab-ctl  reconfigure</code>初始化部署gitlab服务配置</p>
+<pre tabindex="0"><code>看到这里，gitlab初始化完成Running handlers:Running handlers completeChef Client finished, 435/620 resources updated in 02 minutes 53 secondsgitlab Reconfigured!
+</code></pre><p>修改Gitlab-http.conf
+<code>vim /var/opt/gitlab/nginx/conf/gitlab-http.conf</code></p>
+<pre tabindex="0"><code>server_name gitlab.example.com;  rewrite ^(.*)$  https://$host$1 permanent; #添加此行即可
+</code></pre><p><code>gitlab-ctl restart</code>  #重启使配置文件生效</p>
+<p><strong>修改本地host文件</strong></p>
+<pre tabindex="0"><code>增加一行虚拟机ip    gitlab.example.com
+</code></pre><p><strong>web端访问</strong></p>
+<p>浏览器打开URL：gitlab.example.com</p>
+<p>进入之后需要设置第一次密码!！
+默认用户是root</p>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/gitlab/">gitlab</a>
+        
+    </section>
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2023 SHUNCON
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

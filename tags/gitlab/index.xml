@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>gitlab on SHUNCON</title>
+        <link>/tags/gitlab/</link>
+        <description>Recent content in gitlab on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Sat, 03 Nov 2018 10:13:38 +0800</lastBuildDate><atom:link href="/tags/gitlab/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Gitlab安装部署</title>
+        <link>/post/gitlab/</link>
+        <pubDate>Sat, 03 Nov 2018 10:13:38 +0800</pubDate>
+        
+        <guid>/post/gitlab/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;GitLab是什么&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitLab是一个开源版本控制系统，开发语言是Ruby。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab和GitHub的区别&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。
+  GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab优势&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;   开源免费、差异化的版本管理和同步,GUI界面操作和强大的用户权限管理
+   集成度高，能集成绝大开发工具,支持内置HA，保证高并发的稳定.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab主要服务构成&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Nginx轻量级web服务器、gitlab-workharse轻量级的反向代理服务、
+gitlab shell用于处理git命令和修改authorized key列表。
+logrotate日志文件管理工具
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;gitlab工作流程&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;1.创建项目并克隆
+2.创建项目某featuref分支
+3.编写代码并提交至该分支
+4.推送该项目代码到远程gitlab分支服务器
+5.进行代码检查并提交master主分支合并申请
+6.项目领导审查代码并确认合并申请
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;gitlab社区版安装&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum -y install curl policycoreutils  openssh‐server  openssh‐clients  postfix&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;使用官方源安装时间过长可以使用以下清华源：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vim /etc/yum.repos.d/gitlab-ce.repo
+[gitlab-ce]
+name=gitlab-ce
+baseurl=http://mirrors.tuna.tsinghua.edu.cn/gitlab-ce/yum/el7
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+
+后使用yum makecache生成yum缓存
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;安装&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;yum -y install gitlab-ce&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动postfix&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;systemctl start postfix &amp;amp;&amp;amp;systemctl enable postfix&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建本地gitlat SSL证书&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir-p /etc/gitlab/ssl&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;本地密钥生成、签署证书生成、pem证书生成：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#openssl genrsa -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; 2048
+#openssl req -new -key &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.csr&amp;#34;
+省略部分
+-----
+Country Name (2 letter code) [XX]: 回车即可
+State or Province Name (full name) []:回车即可
+Locality Name (eg, city) [Default City]:回车即可
+Organization Name (eg, company) [Default Company Ltd]:回车即可
+Organizational Unit Name (eg, section) []:回车即可
+Common Name (eg, your name or your server&amp;#39;s hostname) []:gitlab.example.com
+Email Address []:admin@example.com 
+
+Please enter the following &amp;#39;extra&amp;#39; attributes
+to be sent with your certificate request
+A challenge password []:123456 
+An optional company name []: 回车即可
+
+签署证书生成：
+#openssl  x509 -req -days 365 -in &amp;#34;/etc/gitlab/ssl/gitlab.example.com.csr&amp;#34;  -signkey &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.crt&amp;#34;
+显示结果：
+Signature ok
+subject=/C=XX/L=Default City/O=Default Company Ltd/CN=gitlab.example.com/emailAddress=admin@example.com
+Getting Private key
+PEM证书生成：
+#openssl  dhparam -out /etc/gitlab/ssl/dhparams.pem  2048
+生成证书时间挺久的 Emmmm...
+
+#ll /etc/gitlab/ssl/ 查看证书是否生成4个证书文件
+#chmod 600 /etc/gitlab/ssl/* 赋予600权限
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;修改gitlab.rb&lt;/strong&gt;
+&lt;code&gt;vim /etc/gitlab/gitlab.rb&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;找到external_url &amp;#39;https://gitlab.example.com/&amp;#39; 将http改为https
+
+找到 redirect_http_to_https
+修改 nginx [&amp;#39;redirect_http_to_https&amp;#39;] =true 将所有http请求转发到
+https
+
+找到ssl_certificate
+修改 nginx [&amp;#39;ssl_certificate&amp;#39;] =&amp;#34;/etc/gitlab/ssl/gitlab.example.com.crt&amp;#34;
+
+修改nginx [&amp;#39;ssl_certificate_key&amp;#39;] =&amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34;
+
+修改nginx [&amp;#39;ssl_dhparam&amp;#39;] = &amp;#34;/etc/gitlab/ssl/dhparams.pem&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;gitlab-ctl  reconfigure&lt;/code&gt;初始化部署gitlab服务配置&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;看到这里，gitlab初始化完成Running handlers:Running handlers completeChef Client finished, 435/620 resources updated in 02 minutes 53 secondsgitlab Reconfigured!
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改Gitlab-http.conf
+&lt;code&gt;vim /var/opt/gitlab/nginx/conf/gitlab-http.conf&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;server_name gitlab.example.com;  rewrite ^(.*)$  https://$host$1 permanent; #添加此行即可
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;gitlab-ctl restart&lt;/code&gt;  #重启使配置文件生效&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;修改本地host文件&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;增加一行虚拟机ip    gitlab.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;web端访问&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;浏览器打开URL：gitlab.example.com&lt;/p&gt;
+&lt;p&gt;进入之后需要设置第一次密码!！
+默认用户是root&lt;/p&gt;</description>
+        </item>
+        
+    </channel>
+</rss>

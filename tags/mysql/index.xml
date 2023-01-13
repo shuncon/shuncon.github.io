@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>MySQL on SHUNCON</title>
+        <link>/tags/mysql/</link>
+        <description>Recent content in MySQL on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright><atom:link href="/tags/mysql/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>MySQL主从复制</title>
+        <link>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+        <description>&lt;pre&gt;&lt;code&gt;                    #MySQL主从复制
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;原理&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;一、什么是主从复制
+将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。
+二、主从复制的作用
+1、主数据库出现问题，可以切换到从数据库。
+2、可以进行数据库层面的读写分离，
+3、可以在从数据库上进行日常备份
+三 过程：
+将Mater节点的数据通过bin-log二进制文件同步到Slave节点
+Binary log：主数据库的二进制日志
+Relay log：从服务器的中继日志
+第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。
+第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。
+第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;环境和安装&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;系统：centos7
+SQL版本：mysql5.7.23  单机多实例3306、3307、3308、
+3306为Master主节点，3307、3308为Slave从节点
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;解决mysql所需要的的依赖包&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum -y install ncurses-devel libaio-devel cmake &lt;/code&gt;
+&lt;code&gt;#yum -y install ncurses-libs  gcc-c++&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/
+版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;安装&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar
+# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql
+# chown mysql.mysql -R /usr/local/mysql 
+# chmod 777 -R /usr/local/mysql
+# useradd mysql -r -s /sbin/nologin 
+# mkdir -p /data/data{3306,3307,3308}/data
+# chown  mysql.mysql -R /data/*
+# cp /usr/local/mysql/support-files/mysqld_multi.server /etc/init.d/mysqld_multi
+# chmod +x /etc/init.d/mysqld_multi #赋予启动脚本权限
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;配置Mysql的配置文件/etc/my.cnf，内容如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;　　　　[mysqld_multi]  
+　　　　mysqld = /usr/local/mysql/bin/mysqld
+　　　　mysqladmin = /usr/local/mysql/bin/mysqladmin
+　　　 log = /tmp/mysql_multi.log
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;添加环境变量&lt;/strong&gt;
+　1.在文件最后面添加内容：
+&lt;code&gt; vim /etc/profile&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;export MYSQL_HOME=/usr/local/mysql
+export PATH=${MYSQL_HOME}/bin:$PATH
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;使修改的配置文件生效：&lt;code&gt;source /etc/profile&lt;/code&gt;
+&lt;strong&gt;初始化MySQL&lt;/strong&gt;
+&lt;code&gt;#chown mysql.mysql -R /usr/local/mysql/mysql_files&lt;/code&gt;
+&lt;code&gt;#/usr/local/mysql/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3307/data &lt;/code&gt; 该命令会随机生成一个密码，以3307为例，可以从命令输出中查看密码
+&lt;code&gt;#/usr/local/mysql/bin/mysql_ssl_rsa_setup --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3308/data&lt;/code&gt; #各实例的SSL连接，以3308为例&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;启动全部实例 ：&lt;code&gt; /etc/init.d/mysqld_multi start&lt;/code&gt;
+&lt;strong&gt;连接实例&lt;/strong&gt;
+&lt;code&gt;mysql -S /tmp/mysql.sock1 -p&lt;/code&gt;前面生成的密码
+进去后修改root密码：&lt;code&gt; set password=password(&#39;123456&#39;);&lt;/code&gt;
+刷新权限：&lt;code&gt;flush privileges;&lt;/code&gt;
+&lt;strong&gt;关闭和启动单实例&lt;/strong&gt;
+&lt;code&gt;#mysqladmin -uroot -p  -S /data/mysql/3308/mysql.sock shutdown&lt;/code&gt; #以3308关闭为例
+&lt;code&gt;#/etc/init.d/mysqld_multi start 3&lt;/code&gt;  #启动3308为例
+&lt;strong&gt;/etc/my.cnf多实例和主从配置&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[mysqld1]
+log-bin=mysql-bin     #启用二进制日记
+server-id=142         #server-id 唯一的！！服务器唯一ID，默认是1，一般取IP最后一段，也可以自定义
+datadir = /data/mysql/3306/data       #设置数据目录
+socket = /data/mysql/3306/mysql.sock         #设置sock文件存放路径
+port = 3306                      #设置监听开放端口　
+user = mysql                           #设置运行用户
+performance_schema = off          #关闭监控
+innodb_buffer_pool_size = 32M         #设置innodb 缓存大小
+bind_address = 0.0.0.0                  #设置监听IP地址
+skip-name-resolve = 0                 #关闭DNS反向解析
+[mysqld2]
+log-bin=mysql-bin
+server-id=143
+datadir = /data/mysql/3307/data       
+socket = /data/mysql/3307/mysql.sock         
+port = 3307                    
+user = mysql                           
+performance_schema = off         
+innodb_buffer_pool_size = 32M         
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                
+[mysqld3]
+log-bin=mysql-bin
+server-id=144
+datadir = /data/mysql/3308/data      
+socket = /data/mysql/3308/mysql.sock        
+port = 3308                      
+user = mysql                          
+performance_schema = off         
+innodb_buffer_pool_size = 32M        
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;进入3306  Master主节点&lt;/strong&gt;
+&lt;code&gt;#mysql -uroot -pshunconf -S /data/mysql/3306/mysql.sock&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;删除5张表，并重新导入脚本
+mysql&amp;gt;use mysql
+mysql&amp;gt;drop table slave_master_info;
+mysql&amp;gt;drop table slave_relay_log_info;
+myqsl&amp;gt;drop table slave_worker_info;
+mysql&amp;gt;drop table innodb_index_stats;
+mysql&amp;gt;drop table innodb_table_stats;
+mysql&amp;gt;source /usr/coolpad/mysql/share/mysql_system_tables.sql #恢复数据库，后重启数据库
+mysql&amp;gt;show master start;
+mysql&amp;gt;grant all privileges on *.* to &amp;#39;root&amp;#39;@&amp;#39;%&amp;#39; identified by &amp;#39;shunconf&amp;#39; with grant option;授权Slave从节点远程连接
+取File和positin的值用到slave上
++------------------+----------+--------------+------------------+-------------------+
+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------------+----------+--------------+------------------+-------------------+
+| mysql-bin.000005 |      154 |              |                  |                   |
++------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;进入3307/3308 Slaver从节点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mysql -uroot -pshunconf -S /data/mysql/3307/mysql.sock&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt;SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+mysql&amp;gt;change master to master_host=&amp;#39;127.0.0.1&amp;#39;, master_user=&amp;#39;root&amp;#39;,master_password=&amp;#39;shunconf&amp;#39;, master_log_file=&amp;#39;mysql-bin.000009&amp;#39;,master_log_pos=154;    取master的show master table；注意不要断开，154数字前后无单引号。
+mysql&amp;gt; start slave; #启用从，stop为停止
+mysql&amp;gt;  show slave status\G  查看Slaver 从节点状态
+*************************** 1. row ***************************
+               Slave_IO_State: Connecting to master
+                  Master_Host: localhost #主服务器地址
+                  Master_User: root  #授权帐户名，尽量避免使用root，测试环境随意！哈哈
+                  Master_Port: 3306   #Mster 主节点的端口
+                Connect_Retry: 60
+              Master_Log_File: mysql-bin.000005
+              Read_Master_Log_Pos: 154   #同步读取二进制日志
+               Relay_Log_File: localhost-relay-bin.000001
+                Relay_Log_Pos: 4
+              Relay_Master_Log_File: mysql-bin.000005
+             Slave_IO_Running: yes  #必须为yes，为Connecting、NO的值都是存在故障的
+            Slave_SQL_Running: yes  #必须为yes
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;在Mster主节点建立库并测试Slave节点&lt;/strong&gt;
+&lt;strong&gt;Mater操作：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt; crate database shun;
+mysql&amp;gt; create table test(
+    -&amp;gt;    id int(4) not null primary key auto_increment,
+    -&amp;gt; name char(20) not null);
+mysql&amp;gt; insert into test values(1,&amp;#39;shun&amp;#39;);
+mysql&amp;gt; insert into test(name) values(&amp;#39;shunconf&amp;#39;);
+mysql&amp;gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| shun               |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;Slave节点操作：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt; use shun;
+mysql&amp;gt; show tables test;
+mysql&amp;gt; select * from test;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | shun     |
+|  2 | shunconf |
++----+----------+
+2 rows in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;主从部署同步完成！数据已经同步完成&lt;/strong&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL基本操作</title>
+        <link>/post/mysql/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/mysql/</guid>
+        <description>&lt;p&gt;这段时间重新学习了一下mysql的增删查改。
+登录：mysql -uroot -pshunconf
+mysql设置密码：
+mysqladmin -u root -p shunconf
+mysql修改密码：
+mysqladmin -u root -p shunconf passwd ‘shunshun’
+改完密码后，重新启动mysql并登录&lt;/p&gt;
+&lt;p&gt;sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下：
+help show；&lt;/p&gt;
+&lt;p&gt;select user(); 查看当前登录用户
+show 命令：
+show databases；  查看库
+show databases like “zabbix”； 查看指定库
+show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号&lt;/p&gt;
+&lt;p&gt;grant授权命令：
+GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;rsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名&lt;/p&gt;
+&lt;p&gt;create创建数据库
+create database shun1; 创建一个名为shun的库&lt;/p&gt;
+&lt;p&gt;create和grant结合使用
+create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;；
+grant all on privileges shun.* to shun2@localhost；
+show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示&lt;/p&gt;
+&lt;p&gt;drop删除数据库
+drop database shun1；删除指定库
+drop table users; 删除指定表&lt;/p&gt;
+&lt;p&gt;查看库的字符集为utf-8
+show create database shun；查看库字符集
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+| Database | Create Database                                               |
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+| shun     | CREATE DATABASE &lt;code&gt;shun&lt;/code&gt; /*!40100 DEFAULT CHARACTER SET utf8 */ | #为utf-8
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+创建指定字符集如下
+CREATE DATABASE &lt;code&gt;shun1&lt;/code&gt; DEFAULT CHARACTER SET gbk; 通过查看库的字符集可以得到命令，简单修改即可使用&lt;/p&gt;
+&lt;p&gt;字符集：
+字符集是来定义mysql字符串的存储方式，校对规则则是定义了比较字符串的方式&lt;/p&gt;
+&lt;p&gt;select查看数据库连接数
+select user,host from mysql.user 查看连接数&lt;/p&gt;
+&lt;p&gt;use切换数据库
+use shun；相当于linux的cd
+select database(); 查看是否已经进入shun库
+show tables; 查看shun库中的表&lt;/p&gt;
+&lt;p&gt;system跳出数据库执行linux如下：
+system ls / 执行并显示命令结果后回到mysql&lt;/p&gt;
+&lt;p&gt;表操作：
+show create table test \G 查看test建表用的语句
+desc test； 查看表结构
+建立test表
+create table test(
+id int(4) not null primary key auto_increment, 设置键值4，not null为禁止为空 primary key定义唯一
+name char(20) not null 设置表长度为20
+);
+再创建一个表：
+create table test1(
+name char(20) not null primary key,
+age int(3) not null
+);&lt;/p&gt;
+&lt;p&gt;向test表里插入数据：
+insert into test values（1，‘shun’）；
+insert into test(name) values(&amp;lsquo;shunconf&amp;rsquo;); 向指定列名插入数据，不需要输入id（自动生成id）
+insert into test(id,name) values(11,&amp;lsquo;zhazha&amp;rsquo;),(12,&amp;lsquo;heheda&amp;rsquo;) 批量插入数据
+insert into test(name) values(&amp;lsquo;1234&amp;rsquo;),(&amp;lsquo;4567&amp;rsquo;); 批量插入数据
+查询表：
+select * from test;
+select * from test where name=&amp;lsquo;shun2&amp;rsquo; 查看表里指定数据
+select * from test limit 2；显示查询数据为2行
+select * from test order by id limit 5 查询数据为倒序5行
+select * from test order by id limit 4 查询数据为升序5行
+select * from test where id&amp;lt;3; 查询数据id小于3 反之使用&amp;gt;3的
+select * from test  where id &amp;gt;6 adn id&amp;lt;8 判断ID大于6 而小于8的数据
+select * from test  where id  &amp;gt;4 or id &amp;lt;6
+and 和 or 参数为：前者and是交集，后者or则为并集
+多表查询：
+select * from test,test1 where test.name=test1.name; 查询test test1这2张表相同的name&lt;/p&gt;
+&lt;p&gt;更改表中字段数据
+update test1 set name=&amp;lsquo;shunconf&amp;rsquo; where name=&amp;lsquo;shun11&amp;rsquo;;修改表中的数据将set name=&amp;lsquo;shunconf&amp;rsquo; 以where判断表中存在name为shun11 进行修改成shunconf&lt;/p&gt;
+&lt;p&gt;alter添加字段
+alter table test add sex char(4)； 添加sex字段
+alter table test add age int(4) after name; 在name字段后面添加age列&lt;/p&gt;
+&lt;p&gt;删除字段
+alter table test drop sex；将test表中的sex字段删除&lt;/p&gt;
+&lt;p&gt;删除表中的数据
+delete from test where id =3; 删除表中id等于3的数据 可以使用&amp;lt; &amp;gt;  % 大于号、小于号、百分号来匹配
+delete from test where  name=&amp;lsquo;shun1&amp;rsquo;删除表中name等于shun的数据&lt;/p&gt;
+&lt;p&gt;清空表数据
+truncate table test；&lt;/p&gt;
+&lt;p&gt;修改表名
+rename table test1 to test0； 将test1表名改成test0&lt;/p&gt;
+&lt;p&gt;set变量
+set names gbk；将表的name设置支持中文
+insert into test(name) values(&amp;lsquo;顺&amp;rsquo;)&lt;/p&gt;
+&lt;p&gt;mysqldump备份数据库
+mysql -uroot -p&amp;rsquo;shunconf&amp;rsquo; -S /var/lib/mysql/mysql.sock -B zabbix &amp;gt;/tmp/zabbixsqlbak.sql 在sheel下执行 以zabbix库为备份，备份时需要根据mysql.sock路径，-B参数指定备份那个库&lt;/p&gt;
+&lt;p&gt;mysqldump恢复数据库
+mysqldump -uroot -p&amp;rsquo;shunconf&amp;rsquo; -S /var/lib/mysql/mysql.sock &amp;lt; /tmp/zabbixbak.sql&lt;/p&gt;
+&lt;p&gt;查看数据库状态
+mysql -uroot -p&amp;rsquo;shunconf&amp;rsquo; -e &amp;lsquo;show processlist&amp;rsquo;&lt;/p&gt;
+&lt;p&gt;mysql存储引擎
+INNODB 和MySAM是最主流的两个存储引擎，现在数据库版本默认的存储引擎是InnoDB.
+InnoDB 特性：
+事务的支持：     支持事务
+锁粒度：    行锁
+并发性：高并发
+构成结构和缓存机制：数据和索引文件都存在.idb文件里，并都缓存在内存里
+select count(&lt;em&gt;) ：需要扫描全表，统计所有行数。
+MySAM  特性：
+事务的支持：   不支持事务
+锁粒度：      表锁
+构成结构和缓存机制：数据文件的扩展名为.myd(MYData)
+索引文件的扩展名是.myi(MYIndex)
+只缓存索引文件，不缓存数据文件
+select count(&lt;/em&gt;) ： 只需要从计数器中读出保存好的行数即可&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        
+    </channel>
+</rss>

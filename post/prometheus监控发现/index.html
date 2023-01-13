@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='1.promtheus支持3种自动发现类型 文件发现服务 consul自动发现 dns 此类型很少用 2.基于文件的服务发现 在prometheus目录下创建targets.yaml # cat targets.yaml - targets: - &amp;#34;localhost:10000&amp;#34; - &amp;#34;localhost:10001&amp;#34; labels: env: production - targets: - &amp;#34;loaclhost:10002&amp;#34; labels: staging 配置到prometheus.yml scrape_configs: - job_name: &amp;#34;file-demo&amp;#34; file_sd_config: - files: [&amp;#34;targets.yaml&amp;#34;] ## 可以添加多个yaml，也可以是yml/json等格式 重启prometheus 后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome 配置生效： consul自动发现 安装配置 Consul 在页面 https://www.consul.io/downloads 下载符合自己系统的安装文件：
+# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip # unzip consul_1.10.2_linux_amd64.zip # 将 consul 二进制移动到 PATH 路径下去 # mv consul /usr/local/bin # consul version Consul v1.10.2 Revision 3cb6eeedb Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents) 编写配置文件 # cat demo-service.'>
+<title>Prometheus监控发现</title>
+
+<link rel='canonical' href='/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/'>
+
+<link rel="stylesheet" href="/scss/style.min.8191399262444ab68b72a18c97392f5349be20a1615d77445be51e974c144cff.css"><meta property='og:title' content='Prometheus监控发现'>
+<meta property='og:description' content='1.promtheus支持3种自动发现类型 文件发现服务 consul自动发现 dns 此类型很少用 2.基于文件的服务发现 在prometheus目录下创建targets.yaml # cat targets.yaml - targets: - &amp;#34;localhost:10000&amp;#34; - &amp;#34;localhost:10001&amp;#34; labels: env: production - targets: - &amp;#34;loaclhost:10002&amp;#34; labels: staging 配置到prometheus.yml scrape_configs: - job_name: &amp;#34;file-demo&amp;#34; file_sd_config: - files: [&amp;#34;targets.yaml&amp;#34;] ## 可以添加多个yaml，也可以是yml/json等格式 重启prometheus 后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome 配置生效： consul自动发现 安装配置 Consul 在页面 https://www.consul.io/downloads 下载符合自己系统的安装文件：
+# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip # unzip consul_1.10.2_linux_amd64.zip # 将 consul 二进制移动到 PATH 路径下去 # mv consul /usr/local/bin # consul version Consul v1.10.2 Revision 3cb6eeedb Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents) 编写配置文件 # cat demo-service.'>
+<meta property='og:url' content='/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/'>
+<meta property='og:site_name' content='SHUNCON'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='Prometheus' /><meta property='article:published_time' content='2022-05-18T10:20:57&#43;08:00'/><meta property='article:modified_time' content='2022-05-18T10:20:57&#43;08:00'/>
+<meta name="twitter:title" content="Prometheus监控发现">
+<meta name="twitter:description" content="1.promtheus支持3种自动发现类型 文件发现服务 consul自动发现 dns 此类型很少用 2.基于文件的服务发现 在prometheus目录下创建targets.yaml # cat targets.yaml - targets: - &amp;#34;localhost:10000&amp;#34; - &amp;#34;localhost:10001&amp;#34; labels: env: production - targets: - &amp;#34;loaclhost:10002&amp;#34; labels: staging 配置到prometheus.yml scrape_configs: - job_name: &amp;#34;file-demo&amp;#34; file_sd_config: - files: [&amp;#34;targets.yaml&amp;#34;] ## 可以添加多个yaml，也可以是yml/json等格式 重启prometheus 后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome 配置生效： consul自动发现 安装配置 Consul 在页面 https://www.consul.io/downloads 下载符合自己系统的安装文件：
+# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip # unzip consul_1.10.2_linux_amd64.zip # 将 consul 二进制移动到 PATH 路径下去 # mv consul /usr/local/bin # consul version Consul v1.10.2 Revision 3cb6eeedb Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents) 编写配置文件 # cat demo-service.">
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "dark");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column compact"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_huea65508e98018a10b4aa6280b3a1eb6c_5801_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">SHUNCON</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>类别标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/about/' >
+                
+                
+                
+                <span>关于我</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/">Prometheus监控发现</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-calendar-time" width="56" height="56" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <path d="M11.795 21h-6.795a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v4" />
+  <circle cx="18" cy="18" r="4" />
+  <path d="M15 3v4" />
+  <path d="M7 3v4" />
+  <path d="M3 11h16" />
+  <path d="M18 16.496v1.504l1 1" />
+</svg>
+                <time class="article-time--published">May 18, 2022</time>
+            </div>
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    2 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h3 id="1promtheus支持3种自动发现类型">1.promtheus支持3种自动发现类型</h3>
+<ul>
+<li>文件发现服务</li>
+<li>consul自动发现</li>
+<li>dns 此类型很少用</li>
+</ul>
+<h3 id="2基于文件的服务发现">2.基于文件的服务发现</h3>
+<pre tabindex="0"><code>在prometheus目录下创建targets.yaml
+# cat targets.yaml 
+- targets:
+   - &#34;localhost:10000&#34;
+   - &#34;localhost:10001&#34;
+  labels:
+   env: production
+- targets:
+   - &#34;loaclhost:10002&#34;
+  labels: staging
+</code></pre><h4 id="配置到prometheusyml">配置到prometheus.yml</h4>
+<pre tabindex="0"><code>scrape_configs:
+ - job_name: &#34;file-demo&#34;
+    file_sd_config:
+     - files: [&#34;targets.yaml&#34;]  ## 可以添加多个yaml，也可以是yml/json等格式
+     
+     重启prometheus
+     后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome
+</code></pre><h4 id="配置生效">配置生效：</h4>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1.png"
+	width="467"
+	height="498"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="93"
+		data-flex-basis="225px"
+	
+></p>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2.png"
+	width="1405"
+	height="603"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="233"
+		data-flex-basis="559px"
+	
+></p>
+<h3 id="consul自动发现">consul自动发现</h3>
+<h4 id="安装配置-consul">安装配置 Consul</h4>
+<p>在页面 <a class="link" href="https://www.consul.io/downloads"  target="_blank" rel="noopener"
+    >https://www.consul.io/downloads</a> 下载符合自己系统的安装文件：</p>
+<pre tabindex="0"><code># wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip
+# unzip consul_1.10.2_linux_amd64.zip
+# 将 consul 二进制移动到 PATH 路径下去
+# mv consul /usr/local/bin
+# consul version
+Consul v1.10.2
+Revision 3cb6eeedb
+Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &gt;2 when speaking to compatible agents)
+</code></pre><h4 id="编写配置文件">编写配置文件</h4>
+<pre tabindex="0"><code># cat demo-service.json 
+{
+  &#34;services&#34;: [
+    {
+      &#34;id&#34;: &#34;demo1&#34;,
+      &#34;name&#34;: &#34;demo&#34;,
+      &#34;address&#34;: &#34;192.168.145.146&#34;,
+      &#34;port&#34;: 10000,
+      &#34;meta&#34;: {
+        &#34;env&#34;: &#34;production&#34;
+      },
+      &#34;checks&#34;: [
+        {
+          &#34;http&#34;: &#34;http://192.168.145.146:10000/api/foo&#34;,
+          &#34;interval&#34;: &#34;1s&#34;
+        }
+      ]
+    },
+    {
+      &#34;id&#34;: &#34;demo2&#34;,
+      &#34;name&#34;: &#34;demo&#34;,
+      &#34;address&#34;: &#34;192.168.145.146&#34;,
+      &#34;port&#34;: 10001,
+      &#34;meta&#34;: {
+        &#34;env&#34;: &#34;production&#34;
+      },
+      &#34;checks&#34;: [
+        {
+          &#34;http&#34;: &#34;http://192.168.145.146:10001/api/foo&#34;,
+          &#34;interval&#34;: &#34;1s&#34;
+        }
+      ]
+    },
+    {
+      &#34;id&#34;: &#34;demo3&#34;,
+      &#34;name&#34;: &#34;demo&#34;,
+      &#34;address&#34;: &#34;192.168.145.146&#34;,
+      &#34;port&#34;: 10002,
+      &#34;meta&#34;: {
+        &#34;env&#34;: &#34;staging&#34;
+      },
+      &#34;checks&#34;: [
+        {
+          &#34;http&#34;: &#34;http://192.168.145.146:10002/api/foo&#34;,
+          &#34;interval&#34;: &#34;1s&#34;
+        }
+      ]
+    }
+  ]
+</code></pre><h4 id="启动以dev模式显示更多日志">启动，以dev模式显示更多日志</h4>
+<pre tabindex="0"><code>☸ ➜ consul agent -dev -config-file=demo-service.json -client 0.0.0.0
+==&gt; Starting Consul agent...
+           Version: &#39;1.10.2&#39;
+           Node ID: &#39;a4a9418c-7f7d-a2da-c81e-94d3d37601aa&#39;
+         Node name: &#39;node2&#39;
+        Datacenter: &#39;dc1&#39; (Segment: &#39;&lt;all&gt;&#39;)
+            Server: true (Bootstrap: false)
+       Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, DNS: 8600)
+      Cluster Addr: 127.0.0.1 (LAN: 8301, WAN: 8302)
+           Encrypt: Gossip: false, TLS-Outgoing: false, TLS-Incoming: false, Auto-Encrypt-TLS: false
+
+==&gt; Log data will now stream in as it occurs:
+......
+</code></pre><h4 id="修改prometheus配置文件">修改prometheus配置文件</h4>
+<pre tabindex="0"><code># cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &#34;consul-demo&#34;  #增加consul发现
+   consul_sd_configs:
+    - server: &#34;localhost:8500&#34;
+ - job_name: &#34;prometheus&#34;
+   static_configs:
+    - targets: [&#34;localhost:9090&#34;]
+    
+  修改完重启prometheus
+</code></pre><h5 id="访问consul1921681451468500http1921681451468500">访问consul：<a class="link" href="http://192.168.145.146:8500/"  target="_blank" rel="noopener"
+    >192.168.145.146:8500</a></h5>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3.png"
+	width="1232"
+	height="463"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="266"
+		data-flex-basis="638px"
+	
+></p>
+<h5 id="访问prometheus并查看config是否更新及监控是否已经自动发现1921681451469090">访问prometheus并查看config是否更新及监控是否已经自动发现:192.168.145.146:9090</h5>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4.png"
+	width="832"
+	height="516"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="161"
+		data-flex-basis="386px"
+	
+></p>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5.png"
+	width="1241"
+	height="556"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="223"
+		data-flex-basis="535px"
+	
+></p>
+<h4 id="移除8300监控项">移除8300监控项</h4>
+<p>图上http://127.0.0.1:8300/metrics是consul自带的，没有提供metrics</p>
+<p>​    -  修改prometheus配置文件进行过滤：</p>
+<pre tabindex="0"><code># cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &#34;consul-demo&#34;
+   consul_sd_configs:
+    - server: &#34;localhost:8500&#34;
+   relabel_configs:
+     - action: keep
+       source_labels: [__meta_consul_service]
+       regex: demo
+     - action: labelmap
+       regex: __meta_consul_service_metadata_(.*)
+ - job_name: &#34;prometheus&#34;
+   static_configs:
+    - targets: [&#34;localhost:9090&#34;]
+  
+  
+  prometheus重启即可
+</code></pre><p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6.png"
+	width="1054"
+	height="541"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="194"
+		data-flex-basis="467px"
+	
+></p>
+<p><img src="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7.png"
+	width="926"
+	height="322"
+	srcset="/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="287"
+		data-flex-basis="690px"
+	
+></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/prometheus/">Prometheus</a>
+        
+    </section>
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2023 SHUNCON
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

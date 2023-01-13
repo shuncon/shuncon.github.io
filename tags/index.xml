@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Tags on SHUNCON</title>
+        <link>/tags/</link>
+        <description>Recent content in Tags on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Wed, 18 May 2022 10:20:57 +0800</lastBuildDate><atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Prometheus</title>
+        <link>/tags/prometheus/</link>
+        <pubDate>Wed, 18 May 2022 10:20:57 +0800</pubDate>
+        
+        <guid>/tags/prometheus/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Nginx</title>
+        <link>/tags/nginx/</link>
+        <pubDate>Thu, 07 Feb 2019 10:20:57 +0800</pubDate>
+        
+        <guid>/tags/nginx/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Jenkins</title>
+        <link>/tags/jenkins/</link>
+        <pubDate>Thu, 13 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/jenkins/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Ansible</title>
+        <link>/tags/ansible/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/ansible/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Tomcat</title>
+        <link>/tags/tomcat/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/tomcat/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Zabbix</title>
+        <link>/tags/zabbix/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/zabbix/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>杂记</title>
+        <link>/tags/%E6%9D%82%E8%AE%B0/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/%E6%9D%82%E8%AE%B0/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>Redis</title>
+        <link>/tags/redis/</link>
+        <pubDate>Sat, 10 Nov 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/tags/redis/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>gitlab</title>
+        <link>/tags/gitlab/</link>
+        <pubDate>Sat, 03 Nov 2018 10:13:38 +0800</pubDate>
+        
+        <guid>/tags/gitlab/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>ELK</title>
+        <link>/tags/elk/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/tags/elk/</guid>
+        <description></description>
+        </item>
+        <item>
+        <title>MySQL</title>
+        <link>/tags/mysql/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/tags/mysql/</guid>
+        <description></description>
+        </item>
+        
+    </channel>
+</rss>

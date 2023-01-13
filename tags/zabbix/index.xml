@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Zabbix on SHUNCON</title>
+        <link>/tags/zabbix/</link>
+        <description>Recent content in Zabbix on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Mon, 10 Dec 2018 10:43:46 +0800</lastBuildDate><atom:link href="/tags/zabbix/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>zabbix监控tomcat</title>
+        <link>/post/zabbix-tomcat/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/zabbix-tomcat/</guid>
+        <description>&lt;h2 id=&#34;版本&#34;&gt;版本&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  zabbix4.0
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;前提条件&#34;&gt;前提条件&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;编译&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; 编译zabbix server时需要提供java支持，即添加--enable-java该选项。
+ 系统也要安装有jdk版本
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;yum&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;yum -y install zabbix-java-gateway&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;开始监控&#34;&gt;开始监控&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;修改zabbix_server.conf&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim/etc/zabbix/zabbix_server.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; JavaGateway=10.0.18.118   //java网关地址，即server端ip地址
+ JavaGatewayPort=10052     //网关端口，取消注释开启即可
+ StartPollers=50
+ StartPingers=100
+ StartJavaPollers=5 
+ 开启java配置已经完成。
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;vim /etc/zabbix/zabbix_java_gateway.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;LISTEN_IP=&amp;#34;0.0.0.0&amp;#34; #监听的IP
+LISTEN_PORT=10052 #监听的端口
+PID_FILE=&amp;#34;/var/run/zabbix/zabbix_java.pid&amp;#34; #pid保存路径
+START_POLLERS=5  #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况
+TIMEOUT=20
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;systemctl restart zabbix-server
+systemctl start  zabbix-java-gatewa
+systemctl enable  zabbix-java-gatewa
+重启，即可&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;修改客户端中的tomcat文件&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim bin/catalina.sh&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;JAVA_OPTS=&amp;#34;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;#34;
+//web端使用ipv4协议，默认使用ipv6
+CATALINA_OPTS=&amp;#34;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345  -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=10.0.18.117&amp;#34;
+端口对应为12345，ip为tomcat服务器的IP
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;wget &lt;a class=&#34;link&#34; href=&#34;http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对应apache-tomcat-8.5.38的&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;wget &lt;a class=&#34;link&#34; href=&#34;https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;下载这两个jar包到apache-tomcat-8.5.38/lib/目录下&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;../bin/shutdown.sh &amp;amp;&amp;amp;  ../bin/start.sh&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;systemctl restart zabbix-agent&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;zabbix-server-web操作&#34;&gt;zabbix server WEB操作：&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;添加jmx&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/1.png&#34;
+	width=&#34;1094&#34;
+	height=&#34;872&#34;
+	srcset=&#34;/post/zabbix-tomcat/1_hu087c23a78603ce50bd4be52f0d831a6e_54521_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/1_hu087c23a78603ce50bd4be52f0d831a6e_54521_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;125&#34;
+		data-flex-basis=&#34;301px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;添加模板：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/2.png&#34;
+	width=&#34;839&#34;
+	height=&#34;284&#34;
+	srcset=&#34;/post/zabbix-tomcat/2_hu45045ec760c218b6d87f9dc402d91845_23418_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/2_hu45045ec760c218b6d87f9dc402d91845_23418_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;295&#34;
+		data-flex-basis=&#34;709px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/3.png&#34;
+	width=&#34;996&#34;
+	height=&#34;160&#34;
+	srcset=&#34;/post/zabbix-tomcat/3_hu9063601a705975a132c644e6e2e0ad0c_23583_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/3_hu9063601a705975a132c644e6e2e0ad0c_23583_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;622&#34;
+		data-flex-basis=&#34;1494px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/4.png&#34;
+	width=&#34;1334&#34;
+	height=&#34;645&#34;
+	srcset=&#34;/post/zabbix-tomcat/4_hu130dea1ac5c0b1156416e4db90f8d983_45929_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/4_hu130dea1ac5c0b1156416e4db90f8d983_45929_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;206&#34;
+		data-flex-basis=&#34;496px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Emmm  只能有数据的图给了，自己搭来学习，没那么多访问。。。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Zabbix 手机短信报警代码</title>
+        <link>/post/zabbix-tel/</link>
+        <pubDate>Wed, 20 Jun 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/zabbix-tel/</guid>
+        <description>&lt;p&gt;由于在公安行业，所管理的服务器不能连接互联网，仅内网通信，但一整天不可能整天盯着zabbix web，特配置为短信报警。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#!/bin/bash
+#export = $1,$2,$3
+echo data &amp;gt;&amp;gt;/tmp/shun2.log
+echo $1 &amp;gt;&amp;gt; /tmp/shun2.log
+echo $2 &amp;gt;&amp;gt; /tmp/shun2.log
+echo $3 &amp;gt;&amp;gt; /tmp/shun2.log
+
+注意关于下面这句是环境所提，若要使用需根据环境需求
+curl -X POST -d &amp;#34;phones[]=$1&amp;amp;content=$2+$3&amp;amp;moduleId=tech&amp;#34; http://IP:短信接口端口/searchservices/identity/noteService/sendNote
+&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        
+    </channel>
+</rss>

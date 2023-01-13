@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Nginx on SHUNCON</title>
+        <link>/tags/nginx/</link>
+        <description>Recent content in Nginx on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Thu, 07 Feb 2019 10:20:57 +0800</lastBuildDate><atom:link href="/tags/nginx/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Nginx的三个status模块使用</title>
+        <link>/post/nginx-status/</link>
+        <pubDate>Thu, 07 Feb 2019 10:20:57 +0800</pubDate>
+        
+        <guid>/post/nginx-status/</guid>
+        <description>&lt;h1 id=&#34;nginx的3个status模块使用&#34;&gt;nginx的3个status模块使用&lt;/h1&gt;
+&lt;h2 id=&#34;模块说明&#34;&gt;模块说明&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;nginx-module-vts： https://github.com/vozlt/nginx-module-vts
+
+ngx_http_stub_status_module：自带但默认不构建的。
+
+ngx_http_stub_status_module  https://github.com/yaoweibin/nginx_upstream_check_module
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;安装nginx&#34;&gt;安装nginx&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;http://nginx.org/download/&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# wget http://nginx.org/download/nginx-1.9.9.tar.gz
+
+# tar -xf nginx-1.9.9.tar.gz &amp;amp;&amp;amp; cd nginx-1.9.9
+
+# cd opt/ &amp;amp;&amp;amp; git clone git://github.com/vozlt/nginx-module-vts.git
+
+# cd opt/ &amp;amp;&amp;amp; git clone https://github.com/yaoweibin/nginx_upstream_check_module.git
+
+# yum -y install gd-devel gcc gcc-c++ autoconf automake zlib zlib-devel openssl openssl-devel pcre pcre-devel
+
+# groupadd -r vuser
+
+# useradd -r -g vuser vuser
+&lt;/code&gt;&lt;/pre&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+../configure --user=vuser \ 
+--group=vuser  \
+--prefix=/data/server/nginx  \
+--with-http_gzip_static_module \ 
+--with-http_image_filter_module  \
+--with-http_ssl_module  \
+--with-http_mp4_module  \
+--with-http_random_index_module  \
+--with-http_stub_status_module  \
+--add-module=/opt/nginx-module-vts \
+--add-module=/opt/nginx_upstream_check_module
+&lt;/code&gt;&lt;/pre&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;模块ngx_http_stub_status_module ,默认不构建的，需加上！
+文档说明：https://nginx.org/en/docs/http/ngx_http_stub_status_module.html
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;make &amp;amp;&amp;amp; make install&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;启动nginx&#34;&gt;启动nginx&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;./sbin/nginx -c conf/nginx.conf
+
+../sbin/nginx -s reload
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置-nginx-module-vts&#34;&gt;配置 nginx-module-vts&lt;/h2&gt;
+&lt;p&gt;可以参考nginx-module-vts 的wiki，如下图例子：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http {
+    vhost_traffic_status_zone;
+   //说明：http段添加此配置
+    ...
+
+    server {
+
+        ...
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+     //说明：在server段中添加该localtion语句
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置ngx_http_stub_status_module&#34;&gt;配置ngx_http_stub_status_module&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location /status2
+        {
+            stub_status；
+            check_status;
+         access_log off;
+        }
+  //该模块仅需在server段添加该localtion语句
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置一个upstream&#34;&gt;配置一个upstream&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;在http端中使用：
+ include vhosts/*;    //先开启虚拟机配置
+
+      upstream jenkins  //开始反向代理
+      {
+        server   127.0.0.1:8080;
+        #check interval=3000 rise=2 fall=3 timeout=1000 type=tcp;
+      }
+在server端中使用：
+ location /jenkins
+        {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_set_header Host  $host;
+            proxy_set_header X-Forwarded-For  $remote_addr;
+
+     }
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;查看status状态&#34;&gt;查看status状态&lt;/h2&gt;
+&lt;h3 id=&#34;nginx-module-vts&#34;&gt;nginx-module-vts&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/1.png&#34;
+	width=&#34;1519&#34;
+	height=&#34;658&#34;
+	srcset=&#34;/post/nginx-status/1_hu2484614802e4ef43747c4cd45792f2f5_70883_480x0_resize_box_3.png 480w, /post/nginx-status/1_hu2484614802e4ef43747c4cd45792f2f5_70883_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;230&#34;
+		data-flex-basis=&#34;554px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;ngx_http_stub_status_module&#34;&gt;ngx_http_stub_status_module&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/2.png&#34;
+	width=&#34;576&#34;
+	height=&#34;301&#34;
+	srcset=&#34;/post/nginx-status/2_hu4f896a0429f40b61da57f3a9789212ca_23216_480x0_resize_box_3.png 480w, /post/nginx-status/2_hu4f896a0429f40b61da57f3a9789212ca_23216_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;191&#34;
+		data-flex-basis=&#34;459px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;为了更客观的查看status2的状态添加了模块：nginx_upstream_check_module
+后取消 #check interval=3000 这里的注释即可使用
+&lt;a class=&#34;link&#34; href=&#34;https://github.com/yaoweibin/nginx_upstream_check_module&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://github.com/yaoweibin/nginx_upstream_check_module&lt;/a&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location /status2
+        {
+           
+            check_status;
+         access_log off;
+        }
+  //该模块仅需在server段添加该localtion语句
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如下图展示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/3.png&#34;
+	width=&#34;950&#34;
+	height=&#34;522&#34;
+	srcset=&#34;/post/nginx-status/3_hud312e7751db785b29d064a1bb0ad723b_67605_480x0_resize_box_3.png 480w, /post/nginx-status/3_hud312e7751db785b29d064a1bb0ad723b_67605_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;181&#34;
+		data-flex-basis=&#34;436px&#34;
+	
+&gt;&lt;/p&gt;</description>
+        </item>
+        
+    </channel>
+</rss>

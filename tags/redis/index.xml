@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Redis on SHUNCON</title>
+        <link>/tags/redis/</link>
+        <description>Recent content in Redis on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Sat, 10 Nov 2018 10:43:46 +0800</lastBuildDate><atom:link href="/tags/redis/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Redis5.0安装及集群搭建</title>
+        <link>/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/</link>
+        <pubDate>Sat, 10 Nov 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;安装依赖&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c++ –y&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum groupinstall &#39;Development Tools&#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;编译redis&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;官网地址：https://redis.io/   
+本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.
+而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#tar xf redis-5.0.0.tar.gz&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#cd redis-5.0.0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#make MALLOC=lib&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#make install &lt;/code&gt;直至此步完成编译。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建节点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir -p /usr/local/redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#cd /usr/local/redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir 25001  25002 25003 25004 25005 25006&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;配置文件&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#注：所有节点配置均使用同样的配置文件
+#vim /usr/local/redis/25001/redis.conf
+daemonize yes
+pidfile /usr/local/redis/25001/redis_25001.pid 
+port 25001
+tcp-backlog 511
+#开启集群
+cluster-enabled  yes
+cluster-config-file  nodes.conf
+cluster-node-timeout   5000
+appendonly yes
+#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用
+bind 10.0.18.134
+timeout 0
+tcp-keepalive 0
+loglevel notice
+logfile &amp;quot;/usr/local/redis/25001/logs/redis.log&amp;quot; #需手动创建该文件
+databases 16
+save 9001
+
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+dir /usr/local/redis/25001/
+slave-serve-stale-data yes
+slave-read-only yes
+repl-diskless-sync no
+repl-diskless-sync-delay 5
+repl-disable-tcp-nodelay no
+slave-priority 100
+
+appendfilename &amp;quot;appendonly.aof&amp;quot;  #数据AOF持久化配置
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-load-truncated yes
+lua-time-limit 5000
+slowlog-log-slower-than 10000
+slowlog-max-len 128
+latency-monitor-threshold 0
+notify-keyspace-events &amp;quot;&amp;quot;
+hash-max-ziplist-entries 512
+hash-max-ziplist-value 64
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+zset-max-ziplist-entries 128
+zset-max-ziplist-value 64
+hll-sparse-max-bytes 3000
+activerehashing yes
+client-output-buffer-limit normal 0 0 0
+client-output-buffer-limit slave 256mb 64mb 60
+client-output-buffer-limit pubsub 32mb 8mb 60
+hz 10
+aof-rewrite-incremental-fsync yes
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;同步其余5个节点目录#&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cp -ra 25001/redis.conf    25002/  #以此类推到剩下的节点&lt;/code&gt;
+&lt;code&gt;#chmod 755 2500* &lt;/code&gt;  #赋予权限
+&lt;code&gt;使用VIM快速更改其他其余节点的端口&lt;/code&gt;
+&lt;code&gt;#vim 25002/redis.conf&lt;/code&gt;
+&lt;code&gt;%s/25001/25002/g  &lt;/code&gt;#vim的命令模式操作，剩下4个节点也是这样，更改后wq保存即可。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动与关闭&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;启动
+&lt;code&gt;redis-server /usr/local/redis/25001/redis.conf #以此类推到其他启动2500x节点&lt;/code&gt;
+关闭
+&lt;code&gt;redis-cli -p 25001 shutdown &lt;/code&gt; #以此类推到其他关闭2500x节点,或者通过正则pkill redis 来杀进程 多杀几次&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;查看端口&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;netstat -tlnp |grep redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建集群&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;这里先解释一下redis-cli用法：
+redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+--cluster-replicas 1
+这里使用的命令是create，因为我们要创建一个新的集群。该选项--cluster-replicas 1意味着我们希望每个创建的主服务器都有一个从服 其他参数是我要用于创建新集群的实例的地址列表。
+显然，我们要求的唯一设置是创建一个包含3个主服务器和3个从服务器的集群。
+Redis-cli将为您提供配置。键入yes接受建议的配置。将配置并加入群集，这意味着实例将被引导为彼此通信。最后，如果一切顺利，你会看到这样的消息：
+[OK] All 16384 slots covered
+
+[root@shunconf redis]# redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+ --cluster-replicas 1
+&amp;gt;&amp;gt;&amp;gt; Performing hash slots allocation on 6 nodes...
+Master[0] -&amp;gt; Slots 0 - 5460
+Master[1] -&amp;gt; Slots 5461 - 10922
+Master[2] -&amp;gt; Slots 10923 - 16383
+Adding replica 10.0.18.134:25004 to 10.0.18.134:25001
+Adding replica 10.0.18.134:25005 to 10.0.18.134:25002
+Adding replica 10.0.18.134:25006 to 10.0.18.134:25003
+&amp;gt;&amp;gt;&amp;gt; Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25004
+   replicates 2f9af809b5684744a1f0b6f2717679a4eb22f6ba
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25005
+   replicates 3dc7d725e5cde621baa4e50b3848c033d7fd0173
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+Can I set the above configuration? (type &#39;yes&#39; to accept): yes    #输入yes
+&amp;gt;&amp;gt;&amp;gt; Nodes configuration updated
+&amp;gt;&amp;gt;&amp;gt; Assign a different config epoch to each node
+&amp;gt;&amp;gt;&amp;gt; Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+...
+&amp;gt;&amp;gt;&amp;gt; Performing Cluster Check (using node 10.0.18.134:25001)
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   slots: (0 slots) slave
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+&amp;gt;&amp;gt;&amp;gt; Check for open slots...
+&amp;gt;&amp;gt;&amp;gt; Check slots coverage...
+[OK] All 16384 slots covered. #成功创建群集
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;检查集群&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# redis-cli -c -p 25001 -h 10.0.18.134
+10.0.18.134:25001&amp;gt; cluster info #检查集群命令
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:4
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:424
+cluster_stats_messages_pong_sent:458
+cluster_stats_messages_sent:882
+cluster_stats_messages_ping_received:453
+cluster_stats_messages_pong_received:423
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:881
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='#MySQL主从复制 原理
+一、什么是主从复制将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。二、主从复制的作用1、主数据库出现问题，可以切换到从数据库。2、可以进行数据库层面的读写分离，3、可以在从数据库上进行日常备份三 过程：将Mater节点的数据通过bin-log二进制文件同步到Slave节点Binary log：主数据库的二进制日志Relay log：从服务器的中继日志第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。环境和安装
+系统：centos7SQL版本：mysql5.7.23 单机多实例3306、3307、3308、3306为Master主节点，3307、3308为Slave从节点解决mysql所需要的的依赖包
+#yum -y install ncurses-devel libaio-devel cmake  #yum -y install ncurses-libs gcc-c&#43;&#43;
+msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz安装
+#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql# chown mysql.mysql -R /usr/local/mysql # chmod 777 -R /usr/local/mysql# useradd mysql -r -s /sbin/nologin # mkdir -p /data/data{3306,3307,3308}/data# chown mysql.'>
+<title>MySQL主从复制</title>
+
+<link rel='canonical' href='../www.shuncon.io/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6.html'>
+
+<link rel="stylesheet" href="../scss/style.min.8191399262444ab68b72a18c97392f5349be20a1615d77445be51e974c144cff.css"><meta property='og:title' content='MySQL主从复制'>
+<meta property='og:description' content='#MySQL主从复制 原理
+一、什么是主从复制将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。二、主从复制的作用1、主数据库出现问题，可以切换到从数据库。2、可以进行数据库层面的读写分离，3、可以在从数据库上进行日常备份三 过程：将Mater节点的数据通过bin-log二进制文件同步到Slave节点Binary log：主数据库的二进制日志Relay log：从服务器的中继日志第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。环境和安装
+系统：centos7SQL版本：mysql5.7.23 单机多实例3306、3307、3308、3306为Master主节点，3307、3308为Slave从节点解决mysql所需要的的依赖包
+#yum -y install ncurses-devel libaio-devel cmake  #yum -y install ncurses-libs gcc-c&#43;&#43;
+msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz安装
+#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql# chown mysql.mysql -R /usr/local/mysql # chmod 777 -R /usr/local/mysql# useradd mysql -r -s /sbin/nologin # mkdir -p /data/data{3306,3307,3308}/data# chown mysql.'>
+<meta property='og:url' content='/www.shuncon.io/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6.html'>
+<meta property='og:site_name' content='SHUNCON'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='MySQL' />
+<meta name="twitter:title" content="MySQL主从复制">
+<meta name="twitter:description" content="#MySQL主从复制 原理
+一、什么是主从复制将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。二、主从复制的作用1、主数据库出现问题，可以切换到从数据库。2、可以进行数据库层面的读写分离，3、可以在从数据库上进行日常备份三 过程：将Mater节点的数据通过bin-log二进制文件同步到Slave节点Binary log：主数据库的二进制日志Relay log：从服务器的中继日志第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。环境和安装
+系统：centos7SQL版本：mysql5.7.23 单机多实例3306、3307、3308、3306为Master主节点，3307、3308为Slave从节点解决mysql所需要的的依赖包
+#yum -y install ncurses-devel libaio-devel cmake  #yum -y install ncurses-libs gcc-c&#43;&#43;
+msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz安装
+#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql# chown mysql.mysql -R /usr/local/mysql # chmod 777 -R /usr/local/mysql# useradd mysql -r -s /sbin/nologin # mkdir -p /data/data{3306,3307,3308}/data# chown mysql.">
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "dark");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column compact"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="../">
+                
+                    
+                    
+                    
+                        
+                        <img src="../img/avatar_huea65508e98018a10b4aa6280b3a1eb6c_5801_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="../">SHUNCON</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='../' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='../tags/' >
+                
+                
+                
+                <span>类别标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='../about/' >
+                
+                
+                
+                <span>关于我</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="../post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6.html">MySQL主从复制</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    3 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <pre><code>                    #MySQL主从复制
+</code></pre>
+<p><strong>原理</strong></p>
+<pre tabindex="0"><code>一、什么是主从复制
+将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。
+二、主从复制的作用
+1、主数据库出现问题，可以切换到从数据库。
+2、可以进行数据库层面的读写分离，
+3、可以在从数据库上进行日常备份
+三 过程：
+将Mater节点的数据通过bin-log二进制文件同步到Slave节点
+Binary log：主数据库的二进制日志
+Relay log：从服务器的中继日志
+第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。
+第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。
+第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。
+</code></pre><p><strong>环境和安装</strong></p>
+<pre tabindex="0"><code>系统：centos7
+SQL版本：mysql5.7.23  单机多实例3306、3307、3308、
+3306为Master主节点，3307、3308为Slave从节点
+</code></pre><p><strong>解决mysql所需要的的依赖包</strong></p>
+<p><code>#yum -y install ncurses-devel libaio-devel cmake </code>
+<code>#yum -y install ncurses-libs  gcc-c++</code></p>
+<pre tabindex="0"><code>msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/
+版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz
+</code></pre><p><strong>安装</strong></p>
+<pre tabindex="0"><code>#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar
+# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql
+# chown mysql.mysql -R /usr/local/mysql 
+# chmod 777 -R /usr/local/mysql
+# useradd mysql -r -s /sbin/nologin 
+# mkdir -p /data/data{3306,3307,3308}/data
+# chown  mysql.mysql -R /data/*
+# cp /usr/local/mysql/support-files/mysqld_multi.server /etc/init.d/mysqld_multi
+# chmod +x /etc/init.d/mysqld_multi #赋予启动脚本权限
+</code></pre><p>配置Mysql的配置文件/etc/my.cnf，内容如下：</p>
+<pre tabindex="0"><code>　　　　[mysqld_multi]  
+　　　　mysqld = /usr/local/mysql/bin/mysqld
+　　　　mysqladmin = /usr/local/mysql/bin/mysqladmin
+　　　 log = /tmp/mysql_multi.log
+</code></pre><p><strong>添加环境变量</strong>
+　1.在文件最后面添加内容：
+<code> vim /etc/profile</code></p>
+<pre tabindex="0"><code>export MYSQL_HOME=/usr/local/mysql
+export PATH=${MYSQL_HOME}/bin:$PATH
+
+</code></pre><ol start="2">
+<li>使修改的配置文件生效：<code>source /etc/profile</code>
+<strong>初始化MySQL</strong>
+<code>#chown mysql.mysql -R /usr/local/mysql/mysql_files</code>
+<code>#/usr/local/mysql/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3307/data </code> 该命令会随机生成一个密码，以3307为例，可以从命令输出中查看密码
+<code>#/usr/local/mysql/bin/mysql_ssl_rsa_setup --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3308/data</code> #各实例的SSL连接，以3308为例</li>
+</ol>
+<p>启动全部实例 ：<code> /etc/init.d/mysqld_multi start</code>
+<strong>连接实例</strong>
+<code>mysql -S /tmp/mysql.sock1 -p</code>前面生成的密码
+进去后修改root密码：<code> set password=password('123456');</code>
+刷新权限：<code>flush privileges;</code>
+<strong>关闭和启动单实例</strong>
+<code>#mysqladmin -uroot -p  -S /data/mysql/3308/mysql.sock shutdown</code> #以3308关闭为例
+<code>#/etc/init.d/mysqld_multi start 3</code>  #启动3308为例
+<strong>/etc/my.cnf多实例和主从配置</strong></p>
+<pre tabindex="0"><code>[mysqld1]
+log-bin=mysql-bin     #启用二进制日记
+server-id=142         #server-id 唯一的！！服务器唯一ID，默认是1，一般取IP最后一段，也可以自定义
+datadir = /data/mysql/3306/data       #设置数据目录
+socket = /data/mysql/3306/mysql.sock         #设置sock文件存放路径
+port = 3306                      #设置监听开放端口　
+user = mysql                           #设置运行用户
+performance_schema = off          #关闭监控
+innodb_buffer_pool_size = 32M         #设置innodb 缓存大小
+bind_address = 0.0.0.0                  #设置监听IP地址
+skip-name-resolve = 0                 #关闭DNS反向解析
+[mysqld2]
+log-bin=mysql-bin
+server-id=143
+datadir = /data/mysql/3307/data       
+socket = /data/mysql/3307/mysql.sock         
+port = 3307                    
+user = mysql                           
+performance_schema = off         
+innodb_buffer_pool_size = 32M         
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                
+[mysqld3]
+log-bin=mysql-bin
+server-id=144
+datadir = /data/mysql/3308/data      
+socket = /data/mysql/3308/mysql.sock        
+port = 3308                      
+user = mysql                          
+performance_schema = off         
+innodb_buffer_pool_size = 32M        
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                 
+</code></pre><p><strong>进入3306  Master主节点</strong>
+<code>#mysql -uroot -pshunconf -S /data/mysql/3306/mysql.sock</code></p>
+<pre tabindex="0"><code>删除5张表，并重新导入脚本
+mysql&gt;use mysql
+mysql&gt;drop table slave_master_info;
+mysql&gt;drop table slave_relay_log_info;
+myqsl&gt;drop table slave_worker_info;
+mysql&gt;drop table innodb_index_stats;
+mysql&gt;drop table innodb_table_stats;
+mysql&gt;source /usr/coolpad/mysql/share/mysql_system_tables.sql #恢复数据库，后重启数据库
+mysql&gt;show master start;
+mysql&gt;grant all privileges on *.* to 'root'@'%' identified by 'shunconf' with grant option;授权Slave从节点远程连接
+取File和positin的值用到slave上
++------------------+----------+--------------+------------------+-------------------+
+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------------+----------+--------------+------------------+-------------------+
+| mysql-bin.000005 |      154 |              |                  |                   |
++------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+</code></pre><p><strong>进入3307/3308 Slaver从节点</strong></p>
+<p><code>#mysql -uroot -pshunconf -S /data/mysql/3307/mysql.sock</code></p>
+<pre tabindex="0"><code>mysql&gt;SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+mysql&gt;change master to master_host='127.0.0.1', master_user='root',master_password='shunconf', master_log_file='mysql-bin.000009',master_log_pos=154;    取master的show master table；注意不要断开，154数字前后无单引号。
+mysql&gt; start slave; #启用从，stop为停止
+mysql&gt;  show slave status\G  查看Slaver 从节点状态
+*************************** 1. row ***************************
+               Slave_IO_State: Connecting to master
+                  Master_Host: localhost #主服务器地址
+                  Master_User: root  #授权帐户名，尽量避免使用root，测试环境随意！哈哈
+                  Master_Port: 3306   #Mster 主节点的端口
+                Connect_Retry: 60
+              Master_Log_File: mysql-bin.000005
+              Read_Master_Log_Pos: 154   #同步读取二进制日志
+               Relay_Log_File: localhost-relay-bin.000001
+                Relay_Log_Pos: 4
+              Relay_Master_Log_File: mysql-bin.000005
+             Slave_IO_Running: yes  #必须为yes，为Connecting、NO的值都是存在故障的
+            Slave_SQL_Running: yes  #必须为yes
+</code></pre><p><strong>在Mster主节点建立库并测试Slave节点</strong>
+<strong>Mater操作：</strong></p>
+<pre tabindex="0"><code>mysql&gt; crate database shun;
+mysql&gt; create table test(
+    -&gt;    id int(4) not null primary key auto_increment,
+    -&gt; name char(20) not null);
+mysql&gt; insert into test values(1,'shun');
+mysql&gt; insert into test(name) values('shunconf');
+mysql&gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| shun               |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+</code></pre><p><strong>Slave节点操作：</strong></p>
+<pre tabindex="0"><code>mysql&gt; use shun;
+mysql&gt; show tables test;
+mysql&gt; select * from test;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | shun     |
+|  2 | shunconf |
++----+----------+
+2 rows in set (0.00 sec)
+</code></pre><p><strong>主从部署同步完成！数据已经同步完成</strong></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="../tags/mysql.html">MySQL</a>
+        
+    </section>
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="../post/mysql.html">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL基本操作</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2023 SHUNCON
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="../ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

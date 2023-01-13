@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Prometheus on SHUNCON</title>
+        <link>/tags/prometheus/</link>
+        <description>Recent content in Prometheus on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Wed, 18 May 2022 10:20:57 +0800</lastBuildDate><atom:link href="/tags/prometheus/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Prometheus监控发现</title>
+        <link>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</link>
+        <pubDate>Wed, 18 May 2022 10:20:57 +0800</pubDate>
+        
+        <guid>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</guid>
+        <description>&lt;h3 id=&#34;1promtheus支持3种自动发现类型&#34;&gt;1.promtheus支持3种自动发现类型&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;文件发现服务&lt;/li&gt;
+&lt;li&gt;consul自动发现&lt;/li&gt;
+&lt;li&gt;dns 此类型很少用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;2基于文件的服务发现&#34;&gt;2.基于文件的服务发现&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;在prometheus目录下创建targets.yaml
+# cat targets.yaml 
+- targets:
+   - &amp;#34;localhost:10000&amp;#34;
+   - &amp;#34;localhost:10001&amp;#34;
+  labels:
+   env: production
+- targets:
+   - &amp;#34;loaclhost:10002&amp;#34;
+  labels: staging
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;配置到prometheusyml&#34;&gt;配置到prometheus.yml&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;scrape_configs:
+ - job_name: &amp;#34;file-demo&amp;#34;
+    file_sd_config:
+     - files: [&amp;#34;targets.yaml&amp;#34;]  ## 可以添加多个yaml，也可以是yml/json等格式
+     
+     重启prometheus
+     后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;配置生效&#34;&gt;配置生效：&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1.png&#34;
+	width=&#34;467&#34;
+	height=&#34;498&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;93&#34;
+		data-flex-basis=&#34;225px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2.png&#34;
+	width=&#34;1405&#34;
+	height=&#34;603&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;233&#34;
+		data-flex-basis=&#34;559px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;consul自动发现&#34;&gt;consul自动发现&lt;/h3&gt;
+&lt;h4 id=&#34;安装配置-consul&#34;&gt;安装配置 Consul&lt;/h4&gt;
+&lt;p&gt;在页面 &lt;a class=&#34;link&#34; href=&#34;https://www.consul.io/downloads&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.consul.io/downloads&lt;/a&gt; 下载符合自己系统的安装文件：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip
+# unzip consul_1.10.2_linux_amd64.zip
+# 将 consul 二进制移动到 PATH 路径下去
+# mv consul /usr/local/bin
+# consul version
+Consul v1.10.2
+Revision 3cb6eeedb
+Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents)
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;编写配置文件&#34;&gt;编写配置文件&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat demo-service.json 
+{
+  &amp;#34;services&amp;#34;: [
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo1&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10000,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;production&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10000/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    },
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo2&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10001,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;production&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10001/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    },
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo3&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10002,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;staging&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10002/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    }
+  ]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;启动以dev模式显示更多日志&#34;&gt;启动，以dev模式显示更多日志&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;☸ ➜ consul agent -dev -config-file=demo-service.json -client 0.0.0.0
+==&amp;gt; Starting Consul agent...
+           Version: &amp;#39;1.10.2&amp;#39;
+           Node ID: &amp;#39;a4a9418c-7f7d-a2da-c81e-94d3d37601aa&amp;#39;
+         Node name: &amp;#39;node2&amp;#39;
+        Datacenter: &amp;#39;dc1&amp;#39; (Segment: &amp;#39;&amp;lt;all&amp;gt;&amp;#39;)
+            Server: true (Bootstrap: false)
+       Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, DNS: 8600)
+      Cluster Addr: 127.0.0.1 (LAN: 8301, WAN: 8302)
+           Encrypt: Gossip: false, TLS-Outgoing: false, TLS-Incoming: false, Auto-Encrypt-TLS: false
+
+==&amp;gt; Log data will now stream in as it occurs:
+......
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;修改prometheus配置文件&#34;&gt;修改prometheus配置文件&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &amp;#34;consul-demo&amp;#34;  #增加consul发现
+   consul_sd_configs:
+    - server: &amp;#34;localhost:8500&amp;#34;
+ - job_name: &amp;#34;prometheus&amp;#34;
+   static_configs:
+    - targets: [&amp;#34;localhost:9090&amp;#34;]
+    
+  修改完重启prometheus
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;访问consul1921681451468500http1921681451468500&#34;&gt;访问consul：&lt;a class=&#34;link&#34; href=&#34;http://192.168.145.146:8500/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;192.168.145.146:8500&lt;/a&gt;&lt;/h5&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3.png&#34;
+	width=&#34;1232&#34;
+	height=&#34;463&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;266&#34;
+		data-flex-basis=&#34;638px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h5 id=&#34;访问prometheus并查看config是否更新及监控是否已经自动发现1921681451469090&#34;&gt;访问prometheus并查看config是否更新及监控是否已经自动发现:192.168.145.146:9090&lt;/h5&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4.png&#34;
+	width=&#34;832&#34;
+	height=&#34;516&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;161&#34;
+		data-flex-basis=&#34;386px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5.png&#34;
+	width=&#34;1241&#34;
+	height=&#34;556&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;223&#34;
+		data-flex-basis=&#34;535px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;移除8300监控项&#34;&gt;移除8300监控项&lt;/h4&gt;
+&lt;p&gt;图上http://127.0.0.1:8300/metrics是consul自带的，没有提供metrics&lt;/p&gt;
+&lt;p&gt;​    -  修改prometheus配置文件进行过滤：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &amp;#34;consul-demo&amp;#34;
+   consul_sd_configs:
+    - server: &amp;#34;localhost:8500&amp;#34;
+   relabel_configs:
+     - action: keep
+       source_labels: [__meta_consul_service]
+       regex: demo
+     - action: labelmap
+       regex: __meta_consul_service_metadata_(.*)
+ - job_name: &amp;#34;prometheus&amp;#34;
+   static_configs:
+    - targets: [&amp;#34;localhost:9090&amp;#34;]
+  
+  
+  prometheus重启即可
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6.png&#34;
+	width=&#34;1054&#34;
+	height=&#34;541&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;194&#34;
+		data-flex-basis=&#34;467px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7.png&#34;
+	width=&#34;926&#34;
+	height=&#34;322&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;287&#34;
+		data-flex-basis=&#34;690px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

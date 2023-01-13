@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='ELK集群 环境 es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装 es-node1 操作 安装 # yum -y install jre# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz# tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/ 创建相关目录 # mkdir -p /data/server/es/elasticsearch-6.6.1/logs# #mkdir /data/es/data -p #数据存储目录 编辑配置文件 #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.logs: /data/server/es/elasticsearch-6.6.1/logs/network.host: 0.0.0.0http.port: 9200transport.tcp.port: 9300http.cors.enabled: truehttp.cors.allow-origin: &amp;#34;*&amp;#34; http.max_content_length: 1024mbgateway.'>
+<title>ELK集群 部署</title>
+
+<link rel='canonical' href='/post/elk-make/'>
+
+<link rel="stylesheet" href="/scss/style.min.8191399262444ab68b72a18c97392f5349be20a1615d77445be51e974c144cff.css"><meta property='og:title' content='ELK集群 部署'>
+<meta property='og:description' content='ELK集群 环境 es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装 es-node1 操作 安装 # yum -y install jre# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz# tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/ 创建相关目录 # mkdir -p /data/server/es/elasticsearch-6.6.1/logs# #mkdir /data/es/data -p #数据存储目录 编辑配置文件 #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.logs: /data/server/es/elasticsearch-6.6.1/logs/network.host: 0.0.0.0http.port: 9200transport.tcp.port: 9300http.cors.enabled: truehttp.cors.allow-origin: &amp;#34;*&amp;#34; http.max_content_length: 1024mbgateway.'>
+<meta property='og:url' content='/post/elk-make/'>
+<meta property='og:site_name' content='SHUNCON'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='ELK' />
+<meta name="twitter:title" content="ELK集群 部署">
+<meta name="twitter:description" content="ELK集群 环境 es-node1 10.0.18.118 主节点es-node2 10.0.18.117 从节点用户权限说明：除了elasticsearch不能用root运行，其他程序均可使用root安装 es-node1 操作 安装 # yum -y install jre# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz# tar xf elasticsearch-6.6.1.tar.gz -C /data/server/es/ 创建相关目录 # mkdir -p /data/server/es/elasticsearch-6.6.1/logs# #mkdir /data/es/data -p #数据存储目录 编辑配置文件 #cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;
+cluster.name: ELKnode.name: es-node1 #节点唯一名称，不可和其他节点重复node.master: truenode.data: truenode.ingest: truenode.attr.rack: r1path.data: /data/es/data path.logs: /data/server/es/elasticsearch-6.6.1/logs/network.host: 0.0.0.0http.port: 9200transport.tcp.port: 9300http.cors.enabled: truehttp.cors.allow-origin: &amp;#34;*&amp;#34; http.max_content_length: 1024mbgateway.">
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "dark");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column compact"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_huea65508e98018a10b4aa6280b3a1eb6c_5801_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">SHUNCON</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>类别标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/about/' >
+                
+                
+                
+                <span>关于我</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/post/elk-make/">ELK集群 部署</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    2 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <h1 id="elk集群">ELK集群</h1>
+<ul>
+<li>环境</li>
+</ul>
+<pre tabindex="0"><code>es-node1    10.0.18.118   主节点
+es-node2     10.0.18.117  从节点
+
+用户权限说明：
+除了elasticsearch不能用root运行，其他程序均可使用root安装
+</code></pre><h2 id="es-node1-操作">es-node1 操作</h2>
+<ul>
+<li>安装</li>
+</ul>
+<pre tabindex="0"><code># yum -y install jre
+
+# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+
+# tar xf elasticsearch-6.6.1.tar.gz  -C /data/server/es/
+</code></pre><ul>
+<li>创建相关目录</li>
+</ul>
+<pre tabindex="0"><code># mkdir -p /data/server/es/elasticsearch-6.6.1/logs
+# #mkdir /data/es/data -p #数据存储目录
+</code></pre><ul>
+<li>编辑配置文件</li>
+</ul>
+<blockquote>
+<p>#cat elasticsearch.yml|grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &#34;*&#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.117] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+
+   以上配置在es配置文件中前后写入必须有空格
+</code></pre><ul>
+<li>系统配置（root用户操作）</li>
+</ul>
+<blockquote>
+<p>#vim /etc/security/limits.conf</p>
+</blockquote>
+<pre tabindex="0"><code>* soft nofile 65536
+
+* hard nofile 131072
+
+* soft nproc 2048
+
+* hard nproc 4096
+     *代表所有用户
+</code></pre><blockquote>
+<p>#vim /etc/sysctl.conf</p>
+</blockquote>
+<pre tabindex="0"><code>vm.max_map_count = 655360
+</code></pre><blockquote>
+<p>#sysctl -p &amp;&amp; reboot 必须重启系统</p>
+</blockquote>
+<ul>
+<li>启动ES</li>
+</ul>
+<blockquote>
+<p>#useradd elk &amp;&amp; su elk
+$./bin/elasticsearch  -d （-d 参数为后台运行）
+$netstat  -tnlp |grep 9200</p>
+</blockquote>
+<blockquote>
+<p>$ curl http://localhost:9200</p>
+</blockquote>
+<p><img src="/post/elk-make/1.png"
+	width="654"
+	height="339"
+	srcset="/post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_480x0_resize_box_3.png 480w, /post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="192"
+		data-flex-basis="463px"
+	
+></p>
+<h2 id="es-node2-操作">es-node2 操作</h2>
+<p>1.重新执行es-node1中的：<code>创建相关目录（数据存储目录）</code> 、 <code>系统配置（root用户操作）</code></p>
+<p>1.1 赋予用户权限</p>
+<blockquote>
+<p>#chown elk.elk -R /data/server/es/<em>es/</em></p>
+</blockquote>
+<blockquote>
+<p>#chown elk.elk -R es/<em>chown elk.elk -R /data/es/</em></p>
+</blockquote>
+<p>2.从es-node1 下发到es-node2（使用root用户下发）</p>
+<blockquote>
+<p>cd /data/server/es</p>
+</blockquote>
+<blockquote>
+<p>scp -r elasticsearch-6.6.1/ 10.0.18.117:&lsquo;pwd&rsquo;
+<code>es2只需要修改node.name即可，其他都与es1相同配置</code></p>
+</blockquote>
+<ul>
+<li>es-node2的配置文件</li>
+</ul>
+<blockquote>
+<p>#cat elasticsearch.yml|grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>
+cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &#34;*&#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.118] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+ 以上配置在es配置文件中前后写入必须有空格
+</code></pre><p>3.启动测试即可</p>
+<h2 id="es-node1-安装head插件">es-node1 安装head插件</h2>
+<ul>
+<li>安装教程：https://github.com/mobz/elasticsearch-head</li>
+</ul>
+<pre tabindex="0"><code>git clone git://github.com/mobz/elasticsearch-head.git 
+cd elasticsearch-head
+npm install 
+vim _site/app.js
+#修改 『http://localhost:9200』字段到本机ES端口与IP
+
+grunt server
+#打开浏览器 http://localhost:9100
+
+elasticsearch-head所属组：elk
+</code></pre><p><img src="/post/elk-make/2.png"
+	width="751"
+	height="422"
+	srcset="/post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_480x0_resize_box_3.png 480w, /post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="177"
+		data-flex-basis="427px"
+	
+></p>
+<h1 id="logstash客户端安装配置">Logstash客户端安装配置</h1>
+<p><strong>说明</strong></p>
+<pre tabindex="0"><code>  由于10.0.18.117（es-node2）中有web服务器（nginx+tomcat）搭来玩的，就选择这台来使用安装Logstash
+  安装目录为：
+          /data/server/es/
+安装用户为root
+</code></pre><blockquote>
+<p>#wget <a class="link" href="https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz"  target="_blank" rel="noopener"
+    >https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>#tar xf logstash-6.6.1.tar.gz &amp;&amp; cd logstash-6.6.1</p>
+</blockquote>
+<ul>
+<li>创建一个test.conf</li>
+</ul>
+<blockquote>
+<p>vim test.conf</p>
+</blockquote>
+<pre tabindex="0"><code>input {
+     stdin{}
+
+}
+
+output {
+     stdout {
+       codec =&gt; rubydebug{}
+     }
+}
+</code></pre><blockquote>
+<p>#./bin/logstash -f test.conf
+#netstat -tnlp |grep 9600     #查看端口是否起来</p>
+</blockquote>
+<ul>
+<li>创建一个test1.conf(提取系统日志)</li>
+</ul>
+<pre tabindex="0"><code>input {　　　　　　　#这里的输入使用的文件，即日志文件messsages
+file {　　　
+path =&gt; “/var/log/messages”　　　＃这是日志文件的绝对路径
+start_position =&gt; “beginning”　＃这个表示从messages的第一行读取，即文件开始处
+}
+}
+
+output {　　　　＃输出到es
+elasticsearch {
+hosts =&gt; [&#34;10.0.18.118:9200&#34;,&#34;10.0.18.117:9200&#34;]
+index =&gt; &#34;system-messages-%{+YYYY-MM}&#34;　＃这里将按照这个索引格式来创建索引
+}
+}
+</code></pre><ul>
+<li>启动</li>
+</ul>
+<blockquote>
+<p>#./bin/logstash -f  test1.conf &amp;   #传输数据将会展示</p>
+</blockquote>
+<blockquote>
+<p>#nohup ./bin/logstash -f  test2.conf  &ndash;config.reload.automatic &amp;</p>
+</blockquote>
+<p><code>nohup .这种后台运行方式 会把许多日志记到这个文件里面去,会在执行目录生成一个nohup.txt 已经读取ES-NODE2的/var/log/messages”中的日志传输到es服务节点上</code>
+<img src="/post/elk-make/3.png"
+	width="1308"
+	height="640"
+	srcset="/post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_480x0_resize_box_3.png 480w, /post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="204"
+		data-flex-basis="490px"
+	
+></p>
+<p>这时，到HEAD插件上去看：
+<img src="/post/elk-make/4-1.png"
+	width="1059"
+	height="366"
+	srcset="/post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="289"
+		data-flex-basis="694px"
+	
+>
+<img src="/post/elk-make/4-2.png"
+	width="1489"
+	height="472"
+	srcset="/post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_480x0_resize_box_3.png 480w, /post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="315"
+		data-flex-basis="757px"
+	
+></p>
+<h2 id="安装kibana">安装kibana</h2>
+<p><strong>说明</strong></p>
+<pre tabindex="0"><code>  由于10.0.18.118（es-node1）,虽然那台都无所谓。两台es那个es节点挂掉都会成为主节点,反正数据都一样
+  安装目录为：
+          /data/server/es/
+安装用户为elk
+</code></pre><blockquote>
+<p>#wget <a class="link" href="https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz"  target="_blank" rel="noopener"
+    >https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>#tar xf kibana-6.6.1-linux-x86_64.tar.gz</p>
+</blockquote>
+<blockquote>
+<p>#chown elk.elk kibana-6.6.1-linux-x86_64 -R &amp;&amp; su elk</p>
+</blockquote>
+<blockquote>
+<p>$# cat  config/kibana.yml |grep -v &lsquo;#&rsquo;</p>
+</blockquote>
+<pre tabindex="0"><code>server.port: 5601
+server.host: &#34;0.0.0.0&#34;
+elasticsearch.hosts: [&#34;http://localhost:9200&#34;]
+</code></pre><ul>
+<li>启动</li>
+</ul>
+<blockquote>
+<p>$nohup /bin/kibana &amp; #后台运行kibana</p>
+</blockquote>
+<ul>
+<li>WEB
+<img src="/post/elk-make/5-1.png"
+	width="1273"
+	height="746"
+	srcset="/post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_480x0_resize_box_3.png 480w, /post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="170"
+		data-flex-basis="409px"
+	
+></li>
+</ul>
+<p><img src="/post/elk-make/5-2.png"
+	width="1559"
+	height="697"
+	srcset="/post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_480x0_resize_box_3.png 480w, /post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="223"
+		data-flex-basis="536px"
+	
+></p>
+<p><img src="/post/elk-make/5-3.png"
+	width="1916"
+	height="472"
+	srcset="/post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_480x0_resize_box_3.png 480w, /post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="405"
+		data-flex-basis="974px"
+	
+></p>
+<p>这是es中创建的索引数据：
+<img src="/post/elk-make/5-4.png"
+	width="969"
+	height="617"
+	srcset="/post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_480x0_resize_box_3.png 480w, /post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="157"
+		data-flex-basis="376px"
+	
+></p>
+<h2 id="安装metricbeat">安装metricbeat</h2>
+<pre tabindex="0"><code>因为kibana web页面老是崩溃，需要安装此插件来结合使用
+</code></pre><blockquote>
+<p>$curl -L -O <a class="link" href="https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz"  target="_blank" rel="noopener"
+    >https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz</a></p>
+</blockquote>
+<blockquote>
+<p>$tar xzvf metricbeat-6.6.1-linux-x86_64.tar.gz</p>
+</blockquote>
+<blockquote>
+<p>$vim metricbeat.yml #metricbeat配置文件</p>
+</blockquote>
+<pre tabindex="0"><code>metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.kibana:
+
+  host: &#34;127.0.0.1:5601&#34;
+
+output.elasticsearch:
+  hosts: [&#34;127.0.0.1:9200&#34;]
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+</code></pre><blockquote>
+<p>$ ./metricbeat -e</p>
+</blockquote>
+<h2 id="创建索引">创建索引</h2>
+<p>PS : 我把浏览器换为谷歌浏览器可以页面中文了</p>
+<p><img src="/post/elk-make/6-001.png"
+	width="1059"
+	height="366"
+	srcset="/post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="289"
+		data-flex-basis="694px"
+	
+></p>
+<pre tabindex="0"><code>之前使用logstash在117中采集系统日志到es，那么在kibana就使用这个名称来创建索引
+</code></pre><p><img src="/post/elk-make/6-01.png"
+	width="857"
+	height="664"
+	srcset="/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="129"
+		data-flex-basis="309px"
+	
+>
+<img src="/post/elk-make/6-01.png"
+	width="857"
+	height="664"
+	srcset="/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="129"
+		data-flex-basis="309px"
+	
+>
+<img src="/post/elk-make/6-1.png"
+	width="987"
+	height="590"
+	srcset="/post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_480x0_resize_box_3.png 480w, /post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="167"
+		data-flex-basis="401px"
+	
+>
+<img src="/post/elk-make/6-2.png"
+	width="914"
+	height="542"
+	srcset="/post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_480x0_resize_box_3.png 480w, /post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="168"
+		data-flex-basis="404px"
+	
+>
+<img src="/post/elk-make/6-3.png"
+	width="1639"
+	height="769"
+	srcset="/post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_480x0_resize_box_3.png 480w, /post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_1024x0_resize_box_3.png 1024w"
+	loading="lazy"
+	
+	
+		class="gallery-image" 
+		data-flex-grow="213"
+		data-flex-basis="511px"
+	
+></p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/elk/">ELK</a>
+        
+    </section>
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2023 SHUNCON
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

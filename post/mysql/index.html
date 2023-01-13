@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN" dir="ltr">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;rsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示'>
+<title>MySQL基本操作</title>
+
+<link rel='canonical' href='/post/mysql/'>
+
+<link rel="stylesheet" href="/scss/style.min.8191399262444ab68b72a18c97392f5349be20a1615d77445be51e974c144cff.css"><meta property='og:title' content='MySQL基本操作'>
+<meta property='og:description' content='这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;rsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示'>
+<meta property='og:url' content='/post/mysql/'>
+<meta property='og:site_name' content='SHUNCON'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='MySQL' />
+<meta name="twitter:title" content="MySQL基本操作">
+<meta name="twitter:description" content="这段时间重新学习了一下mysql的增删查改。 登录：mysql -uroot -pshunconf mysql设置密码： mysqladmin -u root -p shunconf mysql修改密码： mysqladmin -u root -p shunconf passwd ‘shunshun’ 改完密码后，重新启动mysql并登录
+sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下： help show；
+select user(); 查看当前登录用户 show 命令： show databases； 查看库 show databases like “zabbix”； 查看指定库 show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号
+grant授权命令： GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;rsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名
+create创建数据库 create database shun1; 创建一个名为shun的库
+create和grant结合使用 create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;； grant all on privileges shun.* to shun2@localhost； show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示">
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-XXXXXXXX-X', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+    </head>
+    <body class="
+    article-page
+    ">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "dark");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.documentElement.dataset.scheme = 'dark';
+        } else {
+            document.documentElement.dataset.scheme = 'light';
+        }
+    })();
+</script>
+<div class="container main-container flex on-phone--column compact"><aside class="sidebar left-sidebar sticky ">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header>
+        
+            
+            <figure class="site-avatar">
+                <a href="/">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_huea65508e98018a10b4aa6280b3a1eb6c_5801_300x0_resize_box_3.png" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+                </a>
+                
+            </figure>
+            
+        
+        
+        <div class="site-meta">
+            <h1 class="site-name"><a href="/">SHUNCON</a></h1>
+            <h2 class="site-description"></h2>
+        </div>
+    </header><ol class="menu" id="main-menu">
+        
+        
+        
+        <li >
+            <a href='/' >
+                
+                
+                
+                <span>首页</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/tags/' >
+                
+                
+                
+                <span>类别标签</span>
+            </a>
+        </li>
+        
+        
+        <li >
+            <a href='/about/' >
+                
+                
+                
+                <span>关于我</span>
+            </a>
+        </li>
+        
+
+        <div class="menu-bottom-section">
+            
+            
+                <li id="dark-mode-toggle">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                    <span>Dark Mode</span>
+                </li>
+            
+        </div>
+    </ol>
+</aside>
+
+    
+
+            <main class="main full-width">
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+
+    <div class="article-title-wrapper">
+        <h2 class="article-title">
+            <a href="/post/mysql/">MySQL基本操作</a>
+        </h2>
+    
+        
+    </div>
+
+    
+    
+    
+    
+    <footer class="article-time">
+        
+
+        
+            <div>
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+                <time class="article-time--reading">
+                    2 minute read
+                </time>
+            </div>
+        
+    </footer>
+    
+
+    
+</div>
+
+</header>
+
+    <section class="article-content">
+    
+    
+    <p>这段时间重新学习了一下mysql的增删查改。
+登录：mysql -uroot -pshunconf
+mysql设置密码：
+mysqladmin -u root -p shunconf
+mysql修改密码：
+mysqladmin -u root -p shunconf passwd ‘shunshun’
+改完密码后，重新启动mysql并登录</p>
+<p>sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下：
+help show；</p>
+<p>select user(); 查看当前登录用户
+show 命令：
+show databases；  查看库
+show databases like “zabbix”； 查看指定库
+show databases like &lsquo;%za%&rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号</p>
+<p>grant授权命令：
+GRANT ALL ON mysql.* TO &lsquo;shun&rsquo;@&rsquo;localhost&rsquo; IDENTIFIED BY &lsquo;PASSWD&rsquo;; #创建用户并授权，其中mysql.*是库名</p>
+<p>create创建数据库
+create database shun1; 创建一个名为shun的库</p>
+<p>create和grant结合使用
+create user shun2@localhost identified by &lsquo;shunconf&rsquo;；
+grant all on privileges shun.* to shun2@localhost；
+show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示</p>
+<p>drop删除数据库
+drop database shun1；删除指定库
+drop table users; 删除指定表</p>
+<p>查看库的字符集为utf-8
+show create database shun；查看库字符集
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| Database | Create Database                                               |
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| shun     | CREATE DATABASE <code>shun</code> /*!40100 DEFAULT CHARACTER SET utf8 */ | #为utf-8
++&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+创建指定字符集如下
+CREATE DATABASE <code>shun1</code> DEFAULT CHARACTER SET gbk; 通过查看库的字符集可以得到命令，简单修改即可使用</p>
+<p>字符集：
+字符集是来定义mysql字符串的存储方式，校对规则则是定义了比较字符串的方式</p>
+<p>select查看数据库连接数
+select user,host from mysql.user 查看连接数</p>
+<p>use切换数据库
+use shun；相当于linux的cd
+select database(); 查看是否已经进入shun库
+show tables; 查看shun库中的表</p>
+<p>system跳出数据库执行linux如下：
+system ls / 执行并显示命令结果后回到mysql</p>
+<p>表操作：
+show create table test \G 查看test建表用的语句
+desc test； 查看表结构
+建立test表
+create table test(
+id int(4) not null primary key auto_increment, 设置键值4，not null为禁止为空 primary key定义唯一
+name char(20) not null 设置表长度为20
+);
+再创建一个表：
+create table test1(
+name char(20) not null primary key,
+age int(3) not null
+);</p>
+<p>向test表里插入数据：
+insert into test values（1，‘shun’）；
+insert into test(name) values(&lsquo;shunconf&rsquo;); 向指定列名插入数据，不需要输入id（自动生成id）
+insert into test(id,name) values(11,&lsquo;zhazha&rsquo;),(12,&lsquo;heheda&rsquo;) 批量插入数据
+insert into test(name) values(&lsquo;1234&rsquo;),(&lsquo;4567&rsquo;); 批量插入数据
+查询表：
+select * from test;
+select * from test where name=&lsquo;shun2&rsquo; 查看表里指定数据
+select * from test limit 2；显示查询数据为2行
+select * from test order by id limit 5 查询数据为倒序5行
+select * from test order by id limit 4 查询数据为升序5行
+select * from test where id&lt;3; 查询数据id小于3 反之使用&gt;3的
+select * from test  where id &gt;6 adn id&lt;8 判断ID大于6 而小于8的数据
+select * from test  where id  &gt;4 or id &lt;6
+and 和 or 参数为：前者and是交集，后者or则为并集
+多表查询：
+select * from test,test1 where test.name=test1.name; 查询test test1这2张表相同的name</p>
+<p>更改表中字段数据
+update test1 set name=&lsquo;shunconf&rsquo; where name=&lsquo;shun11&rsquo;;修改表中的数据将set name=&lsquo;shunconf&rsquo; 以where判断表中存在name为shun11 进行修改成shunconf</p>
+<p>alter添加字段
+alter table test add sex char(4)； 添加sex字段
+alter table test add age int(4) after name; 在name字段后面添加age列</p>
+<p>删除字段
+alter table test drop sex；将test表中的sex字段删除</p>
+<p>删除表中的数据
+delete from test where id =3; 删除表中id等于3的数据 可以使用&lt; &gt;  % 大于号、小于号、百分号来匹配
+delete from test where  name=&lsquo;shun1&rsquo;删除表中name等于shun的数据</p>
+<p>清空表数据
+truncate table test；</p>
+<p>修改表名
+rename table test1 to test0； 将test1表名改成test0</p>
+<p>set变量
+set names gbk；将表的name设置支持中文
+insert into test(name) values(&lsquo;顺&rsquo;)</p>
+<p>mysqldump备份数据库
+mysql -uroot -p&rsquo;shunconf&rsquo; -S /var/lib/mysql/mysql.sock -B zabbix &gt;/tmp/zabbixsqlbak.sql 在sheel下执行 以zabbix库为备份，备份时需要根据mysql.sock路径，-B参数指定备份那个库</p>
+<p>mysqldump恢复数据库
+mysqldump -uroot -p&rsquo;shunconf&rsquo; -S /var/lib/mysql/mysql.sock &lt; /tmp/zabbixbak.sql</p>
+<p>查看数据库状态
+mysql -uroot -p&rsquo;shunconf&rsquo; -e &lsquo;show processlist&rsquo;</p>
+<p>mysql存储引擎
+INNODB 和MySAM是最主流的两个存储引擎，现在数据库版本默认的存储引擎是InnoDB.
+InnoDB 特性：
+事务的支持：     支持事务
+锁粒度：    行锁
+并发性：高并发
+构成结构和缓存机制：数据和索引文件都存在.idb文件里，并都缓存在内存里
+select count(<em>) ：需要扫描全表，统计所有行数。
+MySAM  特性：
+事务的支持：   不支持事务
+锁粒度：      表锁
+构成结构和缓存机制：数据文件的扩展名为.myd(MYData)
+索引文件的扩展名是.myi(MYIndex)
+只缓存索引文件，不缓存数据文件
+select count(</em>) ： 只需要从计数器中读出保存好的行数即可</p>
+<pre tabindex="0"><code></code></pre>
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/mysql/">MySQL</a>
+        
+    </section>
+
+
+    </footer>
+
+
+    
+</article>
+
+    
+
+    
+
+<aside class="related-content--wrapper">
+    <h2 class="section-title">Related content</h2>
+    <div class="related-content">
+        <div class="flex article-list--tile">
+            
+                
+<article class="">
+    <a href="/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">MySQL主从复制</h2>
+        </div>
+    </a>
+</article>
+
+            
+        </div>
+    </div>
+</aside>
+
+     
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+        2023 SHUNCON
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="3.16.0">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+
+
+    
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"integrity="sha256-ePwmChbbvXbsO02lbM3HoHbSHTHFAeChekF1xKJdleo="crossorigin="anonymous"
+                defer
+                >
+            </script><script 
+                src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"integrity="sha256-UKkzOn/w1mBxRmLLGrSeyB4e1xbrp4xylgAWb3M42pU="crossorigin="anonymous"
+                defer
+                >
+            </script><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.min.css"crossorigin="anonymous"
+            ><link 
+                rel="stylesheet" 
+                href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.css"crossorigin="anonymous"
+            >
+
+            </main>
+        </div>
+        <script 
+                src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.6/dist/vibrant.min.js"integrity="sha256-awcR2jno4kI5X0zL8ex0vi2z&#43;KMkF24hUW8WePSA9HM="crossorigin="anonymous"
+                
+                >
+            </script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

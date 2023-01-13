@@ -1,0 +1,484 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>ELK on SHUNCON</title>
+        <link>/tags/elk/</link>
+        <description>Recent content in ELK on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright><atom:link href="/tags/elk/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>ELK集群 部署</title>
+        <link>/post/elk-make/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/elk-make/</guid>
+        <description>&lt;h1 id=&#34;elk集群&#34;&gt;ELK集群&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;环境&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;es-node1    10.0.18.118   主节点
+es-node2     10.0.18.117  从节点
+
+用户权限说明：
+除了elasticsearch不能用root运行，其他程序均可使用root安装
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;es-node1-操作&#34;&gt;es-node1 操作&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;安装&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# yum -y install jre
+
+# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+
+# tar xf elasticsearch-6.6.1.tar.gz  -C /data/server/es/
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;创建相关目录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# mkdir -p /data/server/es/elasticsearch-6.6.1/logs
+# #mkdir /data/es/data -p #数据存储目录
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;编辑配置文件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &amp;#34;*&amp;#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.117] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+
+   以上配置在es配置文件中前后写入必须有空格
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;系统配置（root用户操作）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#vim /etc/security/limits.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;* soft nofile 65536
+
+* hard nofile 131072
+
+* soft nproc 2048
+
+* hard nproc 4096
+     *代表所有用户
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#vim /etc/sysctl.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vm.max_map_count = 655360
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#sysctl -p &amp;amp;&amp;amp; reboot 必须重启系统&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;启动ES&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#useradd elk &amp;amp;&amp;amp; su elk
+$./bin/elasticsearch  -d （-d 参数为后台运行）
+$netstat  -tnlp |grep 9200&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$ curl http://localhost:9200&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/1.png&#34;
+	width=&#34;654&#34;
+	height=&#34;339&#34;
+	srcset=&#34;/post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_480x0_resize_box_3.png 480w, /post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;192&#34;
+		data-flex-basis=&#34;463px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;es-node2-操作&#34;&gt;es-node2 操作&lt;/h2&gt;
+&lt;p&gt;1.重新执行es-node1中的：&lt;code&gt;创建相关目录（数据存储目录）&lt;/code&gt; 、 &lt;code&gt;系统配置（root用户操作）&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;1.1 赋予用户权限&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk -R /data/server/es/&lt;em&gt;es/&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk -R es/&lt;em&gt;chown elk.elk -R /data/es/&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;2.从es-node1 下发到es-node2（使用root用户下发）&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;cd /data/server/es&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;scp -r elasticsearch-6.6.1/ 10.0.18.117:&amp;lsquo;pwd&amp;rsquo;
+&lt;code&gt;es2只需要修改node.name即可，其他都与es1相同配置&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;es-node2的配置文件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &amp;#34;*&amp;#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.118] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+ 以上配置在es配置文件中前后写入必须有空格
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;3.启动测试即可&lt;/p&gt;
+&lt;h2 id=&#34;es-node1-安装head插件&#34;&gt;es-node1 安装head插件&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;安装教程：https://github.com/mobz/elasticsearch-head&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git clone git://github.com/mobz/elasticsearch-head.git 
+cd elasticsearch-head
+npm install 
+vim _site/app.js
+#修改 『http://localhost:9200』字段到本机ES端口与IP
+
+grunt server
+#打开浏览器 http://localhost:9100
+
+elasticsearch-head所属组：elk
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/elk-make/2.png&#34;
+	width=&#34;751&#34;
+	height=&#34;422&#34;
+	srcset=&#34;/post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_480x0_resize_box_3.png 480w, /post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;177&#34;
+		data-flex-basis=&#34;427px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h1 id=&#34;logstash客户端安装配置&#34;&gt;Logstash客户端安装配置&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;说明&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  由于10.0.18.117（es-node2）中有web服务器（nginx+tomcat）搭来玩的，就选择这台来使用安装Logstash
+  安装目录为：
+          /data/server/es/
+安装用户为root
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#wget &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#tar xf logstash-6.6.1.tar.gz &amp;amp;&amp;amp; cd logstash-6.6.1&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;创建一个test.conf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim test.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;input {
+     stdin{}
+
+}
+
+output {
+     stdout {
+       codec =&amp;gt; rubydebug{}
+     }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#./bin/logstash -f test.conf
+#netstat -tnlp |grep 9600     #查看端口是否起来&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;创建一个test1.conf(提取系统日志)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;input {　　　　　　　#这里的输入使用的文件，即日志文件messsages
+file {　　　
+path =&amp;gt; “/var/log/messages”　　　＃这是日志文件的绝对路径
+start_position =&amp;gt; “beginning”　＃这个表示从messages的第一行读取，即文件开始处
+}
+}
+
+output {　　　　＃输出到es
+elasticsearch {
+hosts =&amp;gt; [&amp;#34;10.0.18.118:9200&amp;#34;,&amp;#34;10.0.18.117:9200&amp;#34;]
+index =&amp;gt; &amp;#34;system-messages-%{+YYYY-MM}&amp;#34;　＃这里将按照这个索引格式来创建索引
+}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;启动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#./bin/logstash -f  test1.conf &amp;amp;   #传输数据将会展示&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#nohup ./bin/logstash -f  test2.conf  &amp;ndash;config.reload.automatic &amp;amp;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;nohup .这种后台运行方式 会把许多日志记到这个文件里面去,会在执行目录生成一个nohup.txt 已经读取ES-NODE2的/var/log/messages”中的日志传输到es服务节点上&lt;/code&gt;
+&lt;img src=&#34;/post/elk-make/3.png&#34;
+	width=&#34;1308&#34;
+	height=&#34;640&#34;
+	srcset=&#34;/post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_480x0_resize_box_3.png 480w, /post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;204&#34;
+		data-flex-basis=&#34;490px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这时，到HEAD插件上去看：
+&lt;img src=&#34;/post/elk-make/4-1.png&#34;
+	width=&#34;1059&#34;
+	height=&#34;366&#34;
+	srcset=&#34;/post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;289&#34;
+		data-flex-basis=&#34;694px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/4-2.png&#34;
+	width=&#34;1489&#34;
+	height=&#34;472&#34;
+	srcset=&#34;/post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_480x0_resize_box_3.png 480w, /post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;315&#34;
+		data-flex-basis=&#34;757px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;安装kibana&#34;&gt;安装kibana&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;说明&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  由于10.0.18.118（es-node1）,虽然那台都无所谓。两台es那个es节点挂掉都会成为主节点,反正数据都一样
+  安装目录为：
+          /data/server/es/
+安装用户为elk
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#wget &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#tar xf kibana-6.6.1-linux-x86_64.tar.gz&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk kibana-6.6.1-linux-x86_64 -R &amp;amp;&amp;amp; su elk&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$# cat  config/kibana.yml |grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;server.port: 5601
+server.host: &amp;#34;0.0.0.0&amp;#34;
+elasticsearch.hosts: [&amp;#34;http://localhost:9200&amp;#34;]
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;启动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$nohup /bin/kibana &amp;amp; #后台运行kibana&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;WEB
+&lt;img src=&#34;/post/elk-make/5-1.png&#34;
+	width=&#34;1273&#34;
+	height=&#34;746&#34;
+	srcset=&#34;/post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_480x0_resize_box_3.png 480w, /post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;170&#34;
+		data-flex-basis=&#34;409px&#34;
+	
+&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/5-2.png&#34;
+	width=&#34;1559&#34;
+	height=&#34;697&#34;
+	srcset=&#34;/post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_480x0_resize_box_3.png 480w, /post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;223&#34;
+		data-flex-basis=&#34;536px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/5-3.png&#34;
+	width=&#34;1916&#34;
+	height=&#34;472&#34;
+	srcset=&#34;/post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_480x0_resize_box_3.png 480w, /post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;405&#34;
+		data-flex-basis=&#34;974px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这是es中创建的索引数据：
+&lt;img src=&#34;/post/elk-make/5-4.png&#34;
+	width=&#34;969&#34;
+	height=&#34;617&#34;
+	srcset=&#34;/post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_480x0_resize_box_3.png 480w, /post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;157&#34;
+		data-flex-basis=&#34;376px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;安装metricbeat&#34;&gt;安装metricbeat&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;因为kibana web页面老是崩溃，需要安装此插件来结合使用
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;$curl -L -O &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$tar xzvf metricbeat-6.6.1-linux-x86_64.tar.gz&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$vim metricbeat.yml #metricbeat配置文件&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.kibana:
+
+  host: &amp;#34;127.0.0.1:5601&amp;#34;
+
+output.elasticsearch:
+  hosts: [&amp;#34;127.0.0.1:9200&amp;#34;]
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;$ ./metricbeat -e&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;创建索引&#34;&gt;创建索引&lt;/h2&gt;
+&lt;p&gt;PS : 我把浏览器换为谷歌浏览器可以页面中文了&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/6-001.png&#34;
+	width=&#34;1059&#34;
+	height=&#34;366&#34;
+	srcset=&#34;/post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;289&#34;
+		data-flex-basis=&#34;694px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;之前使用logstash在117中采集系统日志到es，那么在kibana就使用这个名称来创建索引
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/elk-make/6-01.png&#34;
+	width=&#34;857&#34;
+	height=&#34;664&#34;
+	srcset=&#34;/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;129&#34;
+		data-flex-basis=&#34;309px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-01.png&#34;
+	width=&#34;857&#34;
+	height=&#34;664&#34;
+	srcset=&#34;/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;129&#34;
+		data-flex-basis=&#34;309px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-1.png&#34;
+	width=&#34;987&#34;
+	height=&#34;590&#34;
+	srcset=&#34;/post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_480x0_resize_box_3.png 480w, /post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;167&#34;
+		data-flex-basis=&#34;401px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-2.png&#34;
+	width=&#34;914&#34;
+	height=&#34;542&#34;
+	srcset=&#34;/post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_480x0_resize_box_3.png 480w, /post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;168&#34;
+		data-flex-basis=&#34;404px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-3.png&#34;
+	width=&#34;1639&#34;
+	height=&#34;769&#34;
+	srcset=&#34;/post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_480x0_resize_box_3.png 480w, /post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;213&#34;
+		data-flex-basis=&#34;511px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>

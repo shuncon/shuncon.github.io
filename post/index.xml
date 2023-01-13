@@ -1,0 +1,1888 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Posts on SHUNCON</title>
+        <link>/post/</link>
+        <description>Recent content in Posts on SHUNCON</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>zh-CN</language>
+        <copyright>© This post is licensed under a Creative Commons Attribution-NonCommercial 4.0 International License，please give source if you wish to quote or reproduce.</copyright>
+        <lastBuildDate>Wed, 18 May 2022 10:20:57 +0800</lastBuildDate><atom:link href="/post/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Prometheus监控发现</title>
+        <link>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</link>
+        <pubDate>Wed, 18 May 2022 10:20:57 +0800</pubDate>
+        
+        <guid>/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/</guid>
+        <description>&lt;h3 id=&#34;1promtheus支持3种自动发现类型&#34;&gt;1.promtheus支持3种自动发现类型&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;文件发现服务&lt;/li&gt;
+&lt;li&gt;consul自动发现&lt;/li&gt;
+&lt;li&gt;dns 此类型很少用&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;2基于文件的服务发现&#34;&gt;2.基于文件的服务发现&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;在prometheus目录下创建targets.yaml
+# cat targets.yaml 
+- targets:
+   - &amp;#34;localhost:10000&amp;#34;
+   - &amp;#34;localhost:10001&amp;#34;
+  labels:
+   env: production
+- targets:
+   - &amp;#34;loaclhost:10002&amp;#34;
+  labels: staging
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;配置到prometheusyml&#34;&gt;配置到prometheus.yml&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;scrape_configs:
+ - job_name: &amp;#34;file-demo&amp;#34;
+    file_sd_config:
+     - files: [&amp;#34;targets.yaml&amp;#34;]  ## 可以添加多个yaml，也可以是yml/json等格式
+     
+     重启prometheus
+     后续可以直接修改targets.yaml文件，prome会热更新，不需要重启prome
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;配置生效&#34;&gt;配置生效：&lt;/h4&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1.png&#34;
+	width=&#34;467&#34;
+	height=&#34;498&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/1_hu9fea1ccebf839d412793b8af238d4f77_26253_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;93&#34;
+		data-flex-basis=&#34;225px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2.png&#34;
+	width=&#34;1405&#34;
+	height=&#34;603&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/2_hu71eef9a9197294a870a05591ffa03926_80307_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;233&#34;
+		data-flex-basis=&#34;559px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;consul自动发现&#34;&gt;consul自动发现&lt;/h3&gt;
+&lt;h4 id=&#34;安装配置-consul&#34;&gt;安装配置 Consul&lt;/h4&gt;
+&lt;p&gt;在页面 &lt;a class=&#34;link&#34; href=&#34;https://www.consul.io/downloads&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://www.consul.io/downloads&lt;/a&gt; 下载符合自己系统的安装文件：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# wget https://releases.hashicorp.com/consul/1.10.2/consul_1.10.2_linux_amd64.zip
+# unzip consul_1.10.2_linux_amd64.zip
+# 将 consul 二进制移动到 PATH 路径下去
+# mv consul /usr/local/bin
+# consul version
+Consul v1.10.2
+Revision 3cb6eeedb
+Protocol 2 spoken by default, understands 2 to 3 (agent will automatically use protocol &amp;gt;2 when speaking to compatible agents)
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;编写配置文件&#34;&gt;编写配置文件&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat demo-service.json 
+{
+  &amp;#34;services&amp;#34;: [
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo1&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10000,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;production&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10000/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    },
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo2&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10001,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;production&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10001/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    },
+    {
+      &amp;#34;id&amp;#34;: &amp;#34;demo3&amp;#34;,
+      &amp;#34;name&amp;#34;: &amp;#34;demo&amp;#34;,
+      &amp;#34;address&amp;#34;: &amp;#34;192.168.145.146&amp;#34;,
+      &amp;#34;port&amp;#34;: 10002,
+      &amp;#34;meta&amp;#34;: {
+        &amp;#34;env&amp;#34;: &amp;#34;staging&amp;#34;
+      },
+      &amp;#34;checks&amp;#34;: [
+        {
+          &amp;#34;http&amp;#34;: &amp;#34;http://192.168.145.146:10002/api/foo&amp;#34;,
+          &amp;#34;interval&amp;#34;: &amp;#34;1s&amp;#34;
+        }
+      ]
+    }
+  ]
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;启动以dev模式显示更多日志&#34;&gt;启动，以dev模式显示更多日志&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;☸ ➜ consul agent -dev -config-file=demo-service.json -client 0.0.0.0
+==&amp;gt; Starting Consul agent...
+           Version: &amp;#39;1.10.2&amp;#39;
+           Node ID: &amp;#39;a4a9418c-7f7d-a2da-c81e-94d3d37601aa&amp;#39;
+         Node name: &amp;#39;node2&amp;#39;
+        Datacenter: &amp;#39;dc1&amp;#39; (Segment: &amp;#39;&amp;lt;all&amp;gt;&amp;#39;)
+            Server: true (Bootstrap: false)
+       Client Addr: [0.0.0.0] (HTTP: 8500, HTTPS: -1, gRPC: 8502, DNS: 8600)
+      Cluster Addr: 127.0.0.1 (LAN: 8301, WAN: 8302)
+           Encrypt: Gossip: false, TLS-Outgoing: false, TLS-Incoming: false, Auto-Encrypt-TLS: false
+
+==&amp;gt; Log data will now stream in as it occurs:
+......
+&lt;/code&gt;&lt;/pre&gt;&lt;h4 id=&#34;修改prometheus配置文件&#34;&gt;修改prometheus配置文件&lt;/h4&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &amp;#34;consul-demo&amp;#34;  #增加consul发现
+   consul_sd_configs:
+    - server: &amp;#34;localhost:8500&amp;#34;
+ - job_name: &amp;#34;prometheus&amp;#34;
+   static_configs:
+    - targets: [&amp;#34;localhost:9090&amp;#34;]
+    
+  修改完重启prometheus
+&lt;/code&gt;&lt;/pre&gt;&lt;h5 id=&#34;访问consul1921681451468500http1921681451468500&#34;&gt;访问consul：&lt;a class=&#34;link&#34; href=&#34;http://192.168.145.146:8500/&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;192.168.145.146:8500&lt;/a&gt;&lt;/h5&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3.png&#34;
+	width=&#34;1232&#34;
+	height=&#34;463&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/3_hu7756c863b13aeefbb5cc262e651e1190_35112_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;266&#34;
+		data-flex-basis=&#34;638px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h5 id=&#34;访问prometheus并查看config是否更新及监控是否已经自动发现1921681451469090&#34;&gt;访问prometheus并查看config是否更新及监控是否已经自动发现:192.168.145.146:9090&lt;/h5&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4.png&#34;
+	width=&#34;832&#34;
+	height=&#34;516&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/4_hu6591a4d11bff6d96b023ff82b3ee89cd_33812_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;161&#34;
+		data-flex-basis=&#34;386px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5.png&#34;
+	width=&#34;1241&#34;
+	height=&#34;556&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/5_hu50ad8a7153d6a013b1bec65a7ffec404_63069_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;223&#34;
+		data-flex-basis=&#34;535px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h4 id=&#34;移除8300监控项&#34;&gt;移除8300监控项&lt;/h4&gt;
+&lt;p&gt;图上http://127.0.0.1:8300/metrics是consul自带的，没有提供metrics&lt;/p&gt;
+&lt;p&gt;​    -  修改prometheus配置文件进行过滤：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# cat prometheus.yml
+global:
+  scrape_interval: 5s
+
+
+
+scrape_configs:
+ - job_name: &amp;#34;consul-demo&amp;#34;
+   consul_sd_configs:
+    - server: &amp;#34;localhost:8500&amp;#34;
+   relabel_configs:
+     - action: keep
+       source_labels: [__meta_consul_service]
+       regex: demo
+     - action: labelmap
+       regex: __meta_consul_service_metadata_(.*)
+ - job_name: &amp;#34;prometheus&amp;#34;
+   static_configs:
+    - targets: [&amp;#34;localhost:9090&amp;#34;]
+  
+  
+  prometheus重启即可
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6.png&#34;
+	width=&#34;1054&#34;
+	height=&#34;541&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/6_hu4963c835ced97cf63bebd74bed117eeb_51431_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;194&#34;
+		data-flex-basis=&#34;467px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7.png&#34;
+	width=&#34;926&#34;
+	height=&#34;322&#34;
+	srcset=&#34;/post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_480x0_resize_box_3.png 480w, /post/prometheus%E7%9B%91%E6%8E%A7%E5%8F%91%E7%8E%B0/7_huf78c2da338c6dbdb860f7d607d4ae468_24055_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;287&#34;
+		data-flex-basis=&#34;690px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Nginx的三个status模块使用</title>
+        <link>/post/nginx-status/</link>
+        <pubDate>Thu, 07 Feb 2019 10:20:57 +0800</pubDate>
+        
+        <guid>/post/nginx-status/</guid>
+        <description>&lt;h1 id=&#34;nginx的3个status模块使用&#34;&gt;nginx的3个status模块使用&lt;/h1&gt;
+&lt;h2 id=&#34;模块说明&#34;&gt;模块说明&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;nginx-module-vts： https://github.com/vozlt/nginx-module-vts
+
+ngx_http_stub_status_module：自带但默认不构建的。
+
+ngx_http_stub_status_module  https://github.com/yaoweibin/nginx_upstream_check_module
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;安装nginx&#34;&gt;安装nginx&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;http://nginx.org/download/&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# wget http://nginx.org/download/nginx-1.9.9.tar.gz
+
+# tar -xf nginx-1.9.9.tar.gz &amp;amp;&amp;amp; cd nginx-1.9.9
+
+# cd opt/ &amp;amp;&amp;amp; git clone git://github.com/vozlt/nginx-module-vts.git
+
+# cd opt/ &amp;amp;&amp;amp; git clone https://github.com/yaoweibin/nginx_upstream_check_module.git
+
+# yum -y install gd-devel gcc gcc-c++ autoconf automake zlib zlib-devel openssl openssl-devel pcre pcre-devel
+
+# groupadd -r vuser
+
+# useradd -r -g vuser vuser
+&lt;/code&gt;&lt;/pre&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+../configure --user=vuser \ 
+--group=vuser  \
+--prefix=/data/server/nginx  \
+--with-http_gzip_static_module \ 
+--with-http_image_filter_module  \
+--with-http_ssl_module  \
+--with-http_mp4_module  \
+--with-http_random_index_module  \
+--with-http_stub_status_module  \
+--add-module=/opt/nginx-module-vts \
+--add-module=/opt/nginx_upstream_check_module
+&lt;/code&gt;&lt;/pre&gt;&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;模块ngx_http_stub_status_module ,默认不构建的，需加上！
+文档说明：https://nginx.org/en/docs/http/ngx_http_stub_status_module.html
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;make &amp;amp;&amp;amp; make install&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h3 id=&#34;启动nginx&#34;&gt;启动nginx&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;./sbin/nginx -c conf/nginx.conf
+
+../sbin/nginx -s reload
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置-nginx-module-vts&#34;&gt;配置 nginx-module-vts&lt;/h2&gt;
+&lt;p&gt;可以参考nginx-module-vts 的wiki，如下图例子：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;http {
+    vhost_traffic_status_zone;
+   //说明：http段添加此配置
+    ...
+
+    server {
+
+        ...
+
+        location /status {
+            vhost_traffic_status_display;
+            vhost_traffic_status_display_format html;
+        }
+     //说明：在server段中添加该localtion语句
+    }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置ngx_http_stub_status_module&#34;&gt;配置ngx_http_stub_status_module&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location /status2
+        {
+            stub_status；
+            check_status;
+         access_log off;
+        }
+  //该模块仅需在server段添加该localtion语句
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;配置一个upstream&#34;&gt;配置一个upstream&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;在http端中使用：
+ include vhosts/*;    //先开启虚拟机配置
+
+      upstream jenkins  //开始反向代理
+      {
+        server   127.0.0.1:8080;
+        #check interval=3000 rise=2 fall=3 timeout=1000 type=tcp;
+      }
+在server端中使用：
+ location /jenkins
+        {
+            proxy_pass http://127.0.0.1:8080;
+            proxy_set_header Host  $host;
+            proxy_set_header X-Forwarded-For  $remote_addr;
+
+     }
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;查看status状态&#34;&gt;查看status状态&lt;/h2&gt;
+&lt;h3 id=&#34;nginx-module-vts&#34;&gt;nginx-module-vts&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/1.png&#34;
+	width=&#34;1519&#34;
+	height=&#34;658&#34;
+	srcset=&#34;/post/nginx-status/1_hu2484614802e4ef43747c4cd45792f2f5_70883_480x0_resize_box_3.png 480w, /post/nginx-status/1_hu2484614802e4ef43747c4cd45792f2f5_70883_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;230&#34;
+		data-flex-basis=&#34;554px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;ngx_http_stub_status_module&#34;&gt;ngx_http_stub_status_module&lt;/h3&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/2.png&#34;
+	width=&#34;576&#34;
+	height=&#34;301&#34;
+	srcset=&#34;/post/nginx-status/2_hu4f896a0429f40b61da57f3a9789212ca_23216_480x0_resize_box_3.png 480w, /post/nginx-status/2_hu4f896a0429f40b61da57f3a9789212ca_23216_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;191&#34;
+		data-flex-basis=&#34;459px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;为了更客观的查看status2的状态添加了模块：nginx_upstream_check_module
+后取消 #check interval=3000 这里的注释即可使用
+&lt;a class=&#34;link&#34; href=&#34;https://github.com/yaoweibin/nginx_upstream_check_module&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://github.com/yaoweibin/nginx_upstream_check_module&lt;/a&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;location /status2
+        {
+           
+            check_status;
+         access_log off;
+        }
+  //该模块仅需在server段添加该localtion语句
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;如下图展示：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/nginx-status/3.png&#34;
+	width=&#34;950&#34;
+	height=&#34;522&#34;
+	srcset=&#34;/post/nginx-status/3_hud312e7751db785b29d064a1bb0ad723b_67605_480x0_resize_box_3.png 480w, /post/nginx-status/3_hud312e7751db785b29d064a1bb0ad723b_67605_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;181&#34;
+		data-flex-basis=&#34;436px&#34;
+	
+&gt;&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Jenkins学习笔记-1</title>
+        <link>/post/jenkins-1/</link>
+        <pubDate>Thu, 13 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/jenkins-1/</guid>
+        <description>&lt;h2 id=&#34;jenkins学习笔记&#34;&gt;Jenkins学习笔记&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;Jenkins介绍&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Jenkins是一个开源持续集成工具
+开发工具：java（依赖java环境运行）
+功能：提供了软件开发的持续集成服务
+特点：支持主流软件配置管理，配合实现软件配置管理、持续集成功能
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;Jenkins优势和应用场景&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;主流的运维开发平台，兼容所有主流开发环境
+插件市场可与海量业内主流开发工具实现集成
+job为配置单位与日志管理功能，使运维和开发协同工作
+权限管理划分不同job不同角色
+强大的负载均衡功能，保证项目的可靠性
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;jenkins安装和管理&#34;&gt;Jenkins安装和管理&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+#rpm --import https://jenkins-ci.org/redhat/jenkins-ci.org.key
+确认java环境为8.0或者8.0版本以上，若无则使用：yum -y install java
+#useradd jenkins
+#yum -y install jenkins
+
+更多安装方式，需要看官网，建议采用war包方式安装：
+https://jenkins.io/doc/book/installing/
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;更改jenkins用户启动和端口&#34;&gt;更改Jenkins用户启动和端口&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;#vim /etc/sysconfig/jenkins&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;JENKINS_USER=&amp;#34;jenkins&amp;#34;  
+JENKINS_PORT=&amp;#34;8080&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#chown   -R jenkins:jenkins /var/lib/jenkins/&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#chown  -R  jenkins:jenkins /var/lib/jenkins/&lt;/code&gt;
+备注：若是不使用jenkins用户来运行。这些是必须修改的&lt;/p&gt;
+&lt;p&gt;启动：&lt;code&gt;#systemctl start jenkins&lt;/code&gt;
+web浏览：http://192.168.72.132:8080/&lt;/p&gt;
+&lt;h2 id=&#34;初始化&#34;&gt;初始化&lt;/h2&gt;
+&lt;p&gt;图中很明显说明，使用cat /var/lib/jenkins/secrets/initialAdminPassword
+输入密钥之后才能下一步：
+&lt;img src=&#34;/post/jenkins-1/1.PNG&#34;
+	width=&#34;975&#34;
+	height=&#34;553&#34;
+	srcset=&#34;/post/jenkins-1/1_hu73337860e86f04b7e7c0ef5524c4c027_28510_480x0_resize_box_3.PNG 480w, /post/jenkins-1/1_hu73337860e86f04b7e7c0ef5524c4c027_28510_1024x0_resize_box_3.PNG 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;176&#34;
+		data-flex-basis=&#34;423px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/jenkins-1/2.png&#34;
+	width=&#34;907&#34;
+	height=&#34;639&#34;
+	srcset=&#34;/post/jenkins-1/2_hu85ae2eea1c67decbd1645c80e196fabc_67588_480x0_resize_box_3.png 480w, /post/jenkins-1/2_hu85ae2eea1c67decbd1645c80e196fabc_67588_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;141&#34;
+		data-flex-basis=&#34;340px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;注意，下图邮箱也需要填写的
+&lt;img src=&#34;/post/jenkins-1/3.png&#34;
+	width=&#34;974&#34;
+	height=&#34;809&#34;
+	srcset=&#34;/post/jenkins-1/3_hu6f68ebfab1d818dce8e9257d7ec5ad61_30914_480x0_resize_box_3.png 480w, /post/jenkins-1/3_hu6f68ebfab1d818dce8e9257d7ec5ad61_30914_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;120&#34;
+		data-flex-basis=&#34;288px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;然后一直下一步就ok了&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>zabbix监控tomcat</title>
+        <link>/post/zabbix-tomcat/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/zabbix-tomcat/</guid>
+        <description>&lt;h2 id=&#34;版本&#34;&gt;版本&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  zabbix4.0
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;前提条件&#34;&gt;前提条件&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;编译&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; 编译zabbix server时需要提供java支持，即添加--enable-java该选项。
+ 系统也要安装有jdk版本
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;yum&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;yum -y install zabbix-java-gateway&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;开始监控&#34;&gt;开始监控&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;修改zabbix_server.conf&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim/etc/zabbix/zabbix_server.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; JavaGateway=10.0.18.118   //java网关地址，即server端ip地址
+ JavaGatewayPort=10052     //网关端口，取消注释开启即可
+ StartPollers=50
+ StartPingers=100
+ StartJavaPollers=5 
+ 开启java配置已经完成。
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;vim /etc/zabbix/zabbix_java_gateway.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;LISTEN_IP=&amp;#34;0.0.0.0&amp;#34; #监听的IP
+LISTEN_PORT=10052 #监听的端口
+PID_FILE=&amp;#34;/var/run/zabbix/zabbix_java.pid&amp;#34; #pid保存路径
+START_POLLERS=5  #这是默认启动的监听jmx的线程数，可以根据监控的jmx数量修改成一致的，这样一次就可采集完成所有的jmx状况
+TIMEOUT=20
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;systemctl restart zabbix-server
+systemctl start  zabbix-java-gatewa
+systemctl enable  zabbix-java-gatewa
+重启，即可&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;strong&gt;修改客户端中的tomcat文件&lt;/strong&gt;&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim bin/catalina.sh&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;JAVA_OPTS=&amp;#34;$JAVA_OPTS -Djava.net.preferIPv4Stack=true -Djava.net.preferIPv4Addresses=true &amp;#34;
+//web端使用ipv4协议，默认使用ipv6
+CATALINA_OPTS=&amp;#34;$CATALINA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.port=12345  -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=10.0.18.117&amp;#34;
+端口对应为12345，ip为tomcat服务器的IP
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;wget &lt;a class=&#34;link&#34; href=&#34;http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;http://archive.apache.org/dist/tomcat/tomcat-8/v8.5.38/bin/extras/catalina-jmx-remote.jar&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;对应apache-tomcat-8.5.38的&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;wget &lt;a class=&#34;link&#34; href=&#34;https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://jaist.dl.sourceforge.net/project/jmxcmd/jmxcmd.jar&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;下载这两个jar包到apache-tomcat-8.5.38/lib/目录下&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;../bin/shutdown.sh &amp;amp;&amp;amp;  ../bin/start.sh&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;systemctl restart zabbix-agent&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;zabbix-server-web操作&#34;&gt;zabbix server WEB操作：&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;添加jmx&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/1.png&#34;
+	width=&#34;1094&#34;
+	height=&#34;872&#34;
+	srcset=&#34;/post/zabbix-tomcat/1_hu087c23a78603ce50bd4be52f0d831a6e_54521_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/1_hu087c23a78603ce50bd4be52f0d831a6e_54521_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;125&#34;
+		data-flex-basis=&#34;301px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;添加模板：&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/2.png&#34;
+	width=&#34;839&#34;
+	height=&#34;284&#34;
+	srcset=&#34;/post/zabbix-tomcat/2_hu45045ec760c218b6d87f9dc402d91845_23418_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/2_hu45045ec760c218b6d87f9dc402d91845_23418_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;295&#34;
+		data-flex-basis=&#34;709px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/3.png&#34;
+	width=&#34;996&#34;
+	height=&#34;160&#34;
+	srcset=&#34;/post/zabbix-tomcat/3_hu9063601a705975a132c644e6e2e0ad0c_23583_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/3_hu9063601a705975a132c644e6e2e0ad0c_23583_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;622&#34;
+		data-flex-basis=&#34;1494px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/zabbix-tomcat/4.png&#34;
+	width=&#34;1334&#34;
+	height=&#34;645&#34;
+	srcset=&#34;/post/zabbix-tomcat/4_hu130dea1ac5c0b1156416e4db90f8d983_45929_480x0_resize_box_3.png 480w, /post/zabbix-tomcat/4_hu130dea1ac5c0b1156416e4db90f8d983_45929_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;206&#34;
+		data-flex-basis=&#34;496px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;Emmm  只能有数据的图给了，自己搭来学习，没那么多访问。。。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>使用ansible-cmdb统计服务器使用率</title>
+        <link>/post/ansible-cmdb/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/ansible-cmdb/</guid>
+        <description>&lt;h3 id=&#34;1安装ansible-cmd&#34;&gt;1.安装ansible-cmd&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+#python get-pip.py
+#pip install ansible-cmdb
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/ansible-cmdb/1.png&#34;
+	width=&#34;1072&#34;
+	height=&#34;393&#34;
+	srcset=&#34;/post/ansible-cmdb/1_hu104d490149a667a761dc84242be9c285_56519_480x0_resize_box_3.png 480w, /post/ansible-cmdb/1_hu104d490149a667a761dc84242be9c285_56519_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;272&#34;
+		data-flex-basis=&#34;654px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h3 id=&#34;2使用ansible-cmdb生成信息&#34;&gt;2.使用ansible-cmdb生成信息&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[root@shun ansible]# mkdir out
+[root@shun ansible]# ansible -m setup --tree out/ all
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/ansible-cmdb/2.png&#34;
+	width=&#34;991&#34;
+	height=&#34;424&#34;
+	srcset=&#34;/post/ansible-cmdb/2_hu84b8fdd8226d484ca34003a3aadfa81c_35654_480x0_resize_box_3.png 480w, /post/ansible-cmdb/2_hu84b8fdd8226d484ca34003a3aadfa81c_35654_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;233&#34;
+		data-flex-basis=&#34;560px&#34;
+	
+&gt;
+&lt;strong&gt;生成网页文件&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;ansible-cmdb out/ &amp;gt; /home/overview.html
+
+或者使用：ansible-cmdb -t csv out &amp;gt; cmdb.csv
+将信息写入CSV文件中，在下载到win上面用office办公软件打开即可
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;将网页文件取回本地用浏览器打开即可得到以下效果：
+&lt;img src=&#34;/post/ansible-cmdb/4.png&#34;
+	width=&#34;1375&#34;
+	height=&#34;717&#34;
+	srcset=&#34;/post/ansible-cmdb/4_hu398c39789d166ae62099aa203994a91e_52546_480x0_resize_box_3.png 480w, /post/ansible-cmdb/4_hu398c39789d166ae62099aa203994a91e_52546_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;191&#34;
+		data-flex-basis=&#34;460px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>破窖赋</title>
+        <link>/post/%E7%A0%B4%E7%AA%96%E8%B5%8B/</link>
+        <pubDate>Mon, 10 Dec 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/%E7%A0%B4%E7%AA%96%E8%B5%8B/</guid>
+        <description>&lt;p&gt;天有不测风云，人有旦夕祸福。蜈蚣百足，行不及蛇；雄鸡两翼，飞不过鸦。马有千里之程，无骑不能自往；人有冲天之志，非运不能自通。&lt;/p&gt;
+&lt;p&gt;　　盖闻：人生在世，富贵不能淫，贫贱不能移。文章盖世，孔子厄于陈邦；武略超群，太公钓于渭水。颜渊命短，殊非凶恶之徒；盗跖年长，岂是善良之辈。尧帝明圣，却生不肖之儿；瞽叟愚顽，反生大孝之子。张良原是布衣，萧何称谓县吏。晏子身无五尺，封作齐国宰相；孔明卧居草庐，能作蜀汉军师。楚霸虽雄，败于乌江自刎；汉王虽弱，竟有万里江山。李广有射虎之威，到老无封；冯唐有乘龙之才，一生不遇。韩信未遇之时，无一日三餐，及至遇行，腰悬三尺玉印，一旦时衰，死于阴人之手。&lt;/p&gt;
+&lt;p&gt;　　有先贫而后富，有老壮而少衰。满腹文章，白发竟然不中；才疏学浅，少年及第登科。深院宫娥，运退反为妓妾；风流妓女，时来配作夫人。&lt;/p&gt;
+&lt;p&gt;　　青春美女，却招愚蠢之夫；俊秀郎君，反配粗丑之妇。蛟龙未遇，潜水于鱼鳖之间；君子失时，拱手于小人之下。衣服虽破，常存仪礼之容；面带忧愁，每抱怀安之量。时遭不遇，只宜安贫守份；心若不欺，必然扬眉吐气。初贫君子，天然骨骼生成；乍富小人，不脱贫寒肌体。&lt;/p&gt;
+&lt;p&gt;　　天不得时，日月无光；地不得时，草木不生；水不得时，风浪不平；人不得时，利运不通。注福注禄，命里已安排定，富贵谁不欲？人若不依根基八字，岂能为卿为相？&lt;/p&gt;
+&lt;p&gt;　　吾昔寓居洛阳，朝求僧餐，暮宿破窖，思衣不可遮其体，思食不可济其饥，上人憎，下人厌，人道我贱，非我不弃也。今居朝堂，官至极品，位置三公，身虽鞠躬于一人之下，而列职于千万人之上，有挞百僚之杖，有斩鄙吝之剑，思衣而有罗锦千箱，思食而有珍馐百味，出则壮士执鞭，入则佳人捧觞，上人宠，下人拥。人道我贵，非我之能也，此乃时也、运也、命也。&lt;/p&gt;
+&lt;p&gt;　　嗟呼！人生在世，富贵不可尽用，贫贱不可自欺，听由天地循环，周而复始焉。&lt;/p&gt;
+&lt;p&gt;　　《破窑赋》透出的是人生命运和天地自然变化循环的思想，文章以自己从凄惨到富贵的经历，列举了自古以来历史上诸多名人经历的各种命运和磨难，摆事实讲道理，来说明这世界人生命运的起起落落。&lt;/p&gt;
+&lt;p&gt;　　人生的始与终，在无运与有运、得时与失时的这种天地时空自然变化循环中，会产生天差地别和意想不到的人为和自然变化。只有经历过太多苦难沧桑和大起大伏的人才能够体会到最深刻地天道无常和人情冷暖的巨大变化，才会体会到在人困、人为和天地自然变化循环中，命运的巨烈地沉浮与很多人生无奈的结局。&lt;/p&gt;
+&lt;p&gt;正如《易经的句子：“一命二运三风水四积阴德五读书六名七相八敬鬼神九交贵人十修身”
+一命，即有一个好命；
+二运，即必须走好运；
+三风水，即住地要有好风水；
+四积阴德，即时刻要注意多做善事；
+五读书，即必须学习，知书达理；
+六名，即必须考上状元，榜上有名；
+七相，即做到宰相；
+八敬神，即生活不要忘了祭拜神灵；
+九交贵人，即结交贵人做朋友；
+十养生，即会保养身体；
+十一择人与择偶，即要慎重选择配偶；
+这《破窖赋》感觉是挺好的一片诗文，读完之后感觉听轻松的。人生需淡然，正如：埋骨何须桑葚地，人生何处不青山。&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>tomcat必备知识点</title>
+        <link>/post/tomcat%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86%E7%82%B9/</link>
+        <pubDate>Sat, 17 Nov 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/tomcat%E5%BF%85%E5%A4%87%E7%9F%A5%E8%AF%86%E7%82%B9/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;tomcat隐藏版本信息&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;1.进入tomcat的lib目录找到catalina.jar文件&lt;/p&gt;
+&lt;p&gt;unzip  catalina.jar 得到两个文件夹： &lt;code&gt;META-INF&lt;/code&gt;     &lt;code&gt;org&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;编辑org中的文件&lt;/p&gt;
+&lt;p&gt;vim org/apache/catalina/util/ServerInfo.properties&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;server.info=Win  IIS
+server.number=0.0.0.0
+server.built=Apr 3 2018 20:04:09 UTC
+改成这样的
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;重新打包更新jar的文件内容&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;cd  /tomcat/lib
+#jar uvf catalina.jar org/apache/catalina/util/ServerInfo.properties
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;增加tomcat使用内存量&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; vim bin/catalina.sh 
+ 
+ cygwin=false #在此行上面添加以下代码
+ set JAVA_OPTS=-server -Xms512m -Xmx1024m -XX:MaxNewSize=512m -XX:MaxPermSize=256m
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;解析一下内存参数：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt; -Xms512m 内存最小使用，-Xmx1024m内存最大使用
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;tomcat&lt;/strong&gt;优化参数：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#第一部分：
+&amp;lt;?xml version=&amp;#39;1.0&amp;#39; encoding=&amp;#39;utf-8&amp;#39;?&amp;gt;
+&amp;lt;Server port=&amp;#34;9090&amp;#34; shutdown=&amp;#34;SHUTDOWN&amp;#34;&amp;gt;  #此处自定义为9090
+&amp;lt;Connector port=&amp;#34;9091&amp;#34; protocol=&amp;#34;HTTP/1.1&amp;#34;   #此处自定义为9091
+                maxThreads=&amp;#34;1000&amp;#34;
+                minSpareThreads=&amp;#34;200&amp;#34;
+                maxSpareThreads=&amp;#34;800&amp;#34;
+                acceptCount=&amp;#34;1100&amp;#34;
+               connectionTimeout=&amp;#34;60000&amp;#34;
+               redirectPort=&amp;#34;8402&amp;#34;
+                executor=&amp;#34;tomcatThreadPool&amp;#34;
+                debug=&amp;#34;0&amp;#34;
+                enableLookups=&amp;#34;false&amp;#34;
+                disableUploadTimeout=&amp;#34;true&amp;#34;
+                URIEncoding=&amp;#34;UTF-8&amp;#34;
+                useBodyEncodingForURI=&amp;#34;true&amp;#34;
+#第二部分：
+指定网站首页JSP、JS等文件存放位置
+ &amp;lt;Context docBase=&amp;#34;/data/www/shunconf/webroot&amp;#34; path=&amp;#34;&amp;#34; reloadable=&amp;#34;false&amp;#34;  debug=&amp;#34;0&amp;#34;&amp;gt;
+       &amp;lt;/Context&amp;gt;  定义网站代码存放的路径
+&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        <item>
+        <title>ansible简单使用</title>
+        <link>/post/ansible-1/</link>
+        <pubDate>Sat, 10 Nov 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/ansible-1/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;环境&lt;/strong&gt;&lt;/p&gt;
+&lt;h3 id=&#34;ansible-服务端-和两台客户端必须建立ssh免密认证&#34;&gt;ansible 服务端 和两台客户端必须建立ssh免密认证：&lt;/h3&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;本次安装采用：yum -y install ansible
+ansible 服务端操作：
+ssh-keygen
+ssh-copy-id -i  root@10.0.18.101
+建立免密认证后 ssh root@10.0.18.101验证一下是否成功
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;编辑ansible host文件&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;添加两个在host文件中，该hosts文件属于ansible的管理清单&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;vim /etc/ansible/hosts&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/ansible-1/1.png&#34;
+	width=&#34;587&#34;
+	height=&#34;300&#34;
+	srcset=&#34;/post/ansible-1/1_hu48584074744d7edb25006bc723a64b8a_18069_480x0_resize_box_3.png 480w, /post/ansible-1/1_hu48584074744d7edb25006bc723a64b8a_18069_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;195&#34;
+		data-flex-basis=&#34;469px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;SSH端口不是22端口则在该hosts文件中使用以下方法：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;ansible_ssh_host=10.0.18.11   #主机iP
+ansible_ssh_port=3389         #SSH端口
+ansible_ssh_user=root         #ssh所远程的系统用户
+ansible_ssh_pass=shunconf     #用户密码
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/ansible-1/1.1.png&#34;
+	width=&#34;847&#34;
+	height=&#34;153&#34;
+	srcset=&#34;/post/ansible-1/1.1_hu4e816831ba673757fe652a2d13f9d173_12835_480x0_resize_box_3.png 480w, /post/ansible-1/1.1_hu4e816831ba673757fe652a2d13f9d173_12835_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;553&#34;
+		data-flex-basis=&#34;1328px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;简单使用&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#ansible all -a &#39;/bin/free -m&#39;&lt;/code&gt;
+查看主机内存使用和硬盘空间，通过系统的命令实现！
+&lt;img src=&#34;/post/ansible-1/2.png&#34;
+	width=&#34;704&#34;
+	height=&#34;179&#34;
+	srcset=&#34;/post/ansible-1/2_hud74effa3fcf32a04c899bac0634cd0d3_15031_480x0_resize_box_3.png 480w, /post/ansible-1/2_hud74effa3fcf32a04c899bac0634cd0d3_15031_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;393&#34;
+		data-flex-basis=&#34;943px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/ansible-1/3.1.png&#34;
+	width=&#34;546&#34;
+	height=&#34;336&#34;
+	srcset=&#34;/post/ansible-1/3.1_hu57062ffa9b797261614f6593ed6b98eb_32517_480x0_resize_box_3.png 480w, /post/ansible-1/3.1_hu57062ffa9b797261614f6593ed6b98eb_32517_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;162&#34;
+		data-flex-basis=&#34;390px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#ansible all -m ping -u root&lt;/code&gt;&lt;br&gt;
+#-u是指定用户，可以不加的。&lt;code&gt;ping是ansible中的一个模块&lt;/code&gt; -m参数则表示调用该模块。
+all参数代表全部。&lt;code&gt;ansible 10.0.18.101 -m ping&lt;/code&gt;则ping指定IP&lt;/p&gt;
+&lt;p&gt;主机可以ping通：&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/ansible-1/3.png&#34;
+	width=&#34;461&#34;
+	height=&#34;140&#34;
+	srcset=&#34;/post/ansible-1/3_hue90e099d9868f9751e154c7099c6301d_8253_480x0_resize_box_3.png 480w, /post/ansible-1/3_hue90e099d9868f9751e154c7099c6301d_8253_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;329&#34;
+		data-flex-basis=&#34;790px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;获取文件到ansible主机&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#ansible all -m fetch  -a  &#39;src=/etc/resolv.conf  dest=/opt&#39; &lt;/code&gt;
+使用fetch模块实现，-a选项则传递模块使用的参数：src与dest
+&lt;img src=&#34;/post/ansible-1/4.png&#34;
+	width=&#34;869&#34;
+	height=&#34;476&#34;
+	srcset=&#34;/post/ansible-1/4_hud83a3ea660a0a31d75c1893feaa8a013_53526_480x0_resize_box_3.png 480w, /post/ansible-1/4_hud83a3ea660a0a31d75c1893feaa8a013_53526_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;182&#34;
+		data-flex-basis=&#34;438px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>Redis5.0安装及集群搭建</title>
+        <link>/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/</link>
+        <pubDate>Sat, 10 Nov 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/redis5.0%E5%AE%89%E8%A3%85%E5%8F%8A%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;安装依赖&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum install ruby ruby-devel rubygems rpm-build gcc gcc-c++ –y&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum groupinstall &#39;Development Tools&#39;&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;编译redis&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;官网地址：https://redis.io/   
+本次使用redis5.0版本，单机集群。5.x版本至少要6个redis节点才能集群。而redis5.x集群命令采用redis-cli来进行集群.
+而使用redis-trib.rb只用于Redis的4.x或3.x版本来进行群集创建
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;#tar xf redis-5.0.0.tar.gz&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#cd redis-5.0.0&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#make MALLOC=lib&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#make install &lt;/code&gt;直至此步完成编译。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建节点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir -p /usr/local/redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#cd /usr/local/redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir 25001  25002 25003 25004 25005 25006&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;配置文件&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;#注：所有节点配置均使用同样的配置文件
+#vim /usr/local/redis/25001/redis.conf
+daemonize yes
+pidfile /usr/local/redis/25001/redis_25001.pid 
+port 25001
+tcp-backlog 511
+#开启集群
+cluster-enabled  yes
+cluster-config-file  nodes.conf
+cluster-node-timeout   5000
+appendonly yes
+#bind配置这一项，可以用127.0.0.1来，也可以用真实IP来使用
+bind 10.0.18.134
+timeout 0
+tcp-keepalive 0
+loglevel notice
+logfile &amp;quot;/usr/local/redis/25001/logs/redis.log&amp;quot; #需手动创建该文件
+databases 16
+save 9001
+
+save 300 10
+save 60 10000
+stop-writes-on-bgsave-error yes
+rdbcompression yes
+rdbchecksum yes
+dbfilename dump.rdb
+dir /usr/local/redis/25001/
+slave-serve-stale-data yes
+slave-read-only yes
+repl-diskless-sync no
+repl-diskless-sync-delay 5
+repl-disable-tcp-nodelay no
+slave-priority 100
+
+appendfilename &amp;quot;appendonly.aof&amp;quot;  #数据AOF持久化配置
+appendfsync everysec
+no-appendfsync-on-rewrite no
+auto-aof-rewrite-percentage 100
+auto-aof-rewrite-min-size 64mb
+aof-load-truncated yes
+lua-time-limit 5000
+slowlog-log-slower-than 10000
+slowlog-max-len 128
+latency-monitor-threshold 0
+notify-keyspace-events &amp;quot;&amp;quot;
+hash-max-ziplist-entries 512
+hash-max-ziplist-value 64
+list-max-ziplist-entries 512
+list-max-ziplist-value 64
+set-max-intset-entries 512
+zset-max-ziplist-entries 128
+zset-max-ziplist-value 64
+hll-sparse-max-bytes 3000
+activerehashing yes
+client-output-buffer-limit normal 0 0 0
+client-output-buffer-limit slave 256mb 64mb 60
+client-output-buffer-limit pubsub 32mb 8mb 60
+hz 10
+aof-rewrite-incremental-fsync yes
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;同步其余5个节点目录#&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;cp -ra 25001/redis.conf    25002/  #以此类推到剩下的节点&lt;/code&gt;
+&lt;code&gt;#chmod 755 2500* &lt;/code&gt;  #赋予权限
+&lt;code&gt;使用VIM快速更改其他其余节点的端口&lt;/code&gt;
+&lt;code&gt;#vim 25002/redis.conf&lt;/code&gt;
+&lt;code&gt;%s/25001/25002/g  &lt;/code&gt;#vim的命令模式操作，剩下4个节点也是这样，更改后wq保存即可。&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动与关闭&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;启动
+&lt;code&gt;redis-server /usr/local/redis/25001/redis.conf #以此类推到其他启动2500x节点&lt;/code&gt;
+关闭
+&lt;code&gt;redis-cli -p 25001 shutdown &lt;/code&gt; #以此类推到其他关闭2500x节点,或者通过正则pkill redis 来杀进程 多杀几次&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;查看端口&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;netstat -tlnp |grep redis&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建集群&lt;/strong&gt;&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;这里先解释一下redis-cli用法：
+redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+--cluster-replicas 1
+这里使用的命令是create，因为我们要创建一个新的集群。该选项--cluster-replicas 1意味着我们希望每个创建的主服务器都有一个从服 其他参数是我要用于创建新集群的实例的地址列表。
+显然，我们要求的唯一设置是创建一个包含3个主服务器和3个从服务器的集群。
+Redis-cli将为您提供配置。键入yes接受建议的配置。将配置并加入群集，这意味着实例将被引导为彼此通信。最后，如果一切顺利，你会看到这样的消息：
+[OK] All 16384 slots covered
+
+[root@shunconf redis]# redis-cli  --cluster  create 10.0.18.134:25001 10.0.18.134:25002 \
+10.0.18.134:25003 10.0.18.134:25004  10.0.18.134:25005 10.0.18.134:25006 \
+ --cluster-replicas 1
+&amp;gt;&amp;gt;&amp;gt; Performing hash slots allocation on 6 nodes...
+Master[0] -&amp;gt; Slots 0 - 5460
+Master[1] -&amp;gt; Slots 5461 - 10922
+Master[2] -&amp;gt; Slots 10923 - 16383
+Adding replica 10.0.18.134:25004 to 10.0.18.134:25001
+Adding replica 10.0.18.134:25005 to 10.0.18.134:25002
+Adding replica 10.0.18.134:25006 to 10.0.18.134:25003
+&amp;gt;&amp;gt;&amp;gt; Trying to optimize slaves allocation for anti-affinity
+[WARNING] Some slaves are in the same host as their master
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25004
+   replicates 2f9af809b5684744a1f0b6f2717679a4eb22f6ba
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25005
+   replicates 3dc7d725e5cde621baa4e50b3848c033d7fd0173
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+Can I set the above configuration? (type &#39;yes&#39; to accept): yes    #输入yes
+&amp;gt;&amp;gt;&amp;gt; Nodes configuration updated
+&amp;gt;&amp;gt;&amp;gt; Assign a different config epoch to each node
+&amp;gt;&amp;gt;&amp;gt; Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+...
+&amp;gt;&amp;gt;&amp;gt; Performing Cluster Check (using node 10.0.18.134:25001)
+M: 2f9af809b5684744a1f0b6f2717679a4eb22f6ba 10.0.18.134:25001
+   slots:[0-5460] (5461 slots) master
+M: 3dc7d725e5cde621baa4e50b3848c033d7fd0173 10.0.18.134:25002
+   slots:[5461-10922] (5462 slots) master
+S: 9304a58a9c21d6f5d0f515a323a94ae6d1b95f27 10.0.18.134:25006
+   slots: (0 slots) slave
+   replicates 8a8e77b6b710be083aa188d070228eb11e11598a
+M: 8a8e77b6b710be083aa188d070228eb11e11598a 10.0.18.134:25003
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+[OK] All nodes agree about slots configuration.
+&amp;gt;&amp;gt;&amp;gt; Check for open slots...
+&amp;gt;&amp;gt;&amp;gt; Check slots coverage...
+[OK] All 16384 slots covered. #成功创建群集
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;检查集群&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;# redis-cli -c -p 25001 -h 10.0.18.134
+10.0.18.134:25001&amp;gt; cluster info #检查集群命令
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:4
+cluster_size:3
+cluster_current_epoch:6
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:424
+cluster_stats_messages_pong_sent:458
+cluster_stats_messages_sent:882
+cluster_stats_messages_ping_received:453
+cluster_stats_messages_pong_received:423
+cluster_stats_messages_meet_received:5
+cluster_stats_messages_received:881
+&lt;/code&gt;&lt;/pre&gt;
+</description>
+        </item>
+        <item>
+        <title>Gitlab安装部署</title>
+        <link>/post/gitlab/</link>
+        <pubDate>Sat, 03 Nov 2018 10:13:38 +0800</pubDate>
+        
+        <guid>/post/gitlab/</guid>
+        <description>&lt;p&gt;&lt;strong&gt;GitLab是什么&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitLab是一个开源版本控制系统，开发语言是Ruby。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab和GitHub的区别&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  GitHub分布式在线代码托管仓库，个人版本可以在线免费试用，企业版本收费和需要服务器安装。
+  GitLab分布式在线代码仓库托管软件，分社区免费版与企业版本收费，都需要服务器安装,而在中小企业使用社区免费版即可。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab优势&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;   开源免费、差异化的版本管理和同步,GUI界面操作和强大的用户权限管理
+   集成度高，能集成绝大开发工具,支持内置HA，保证高并发的稳定.
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;GitLab主要服务构成&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;Nginx轻量级web服务器、gitlab-workharse轻量级的反向代理服务、
+gitlab shell用于处理git命令和修改authorized key列表。
+logrotate日志文件管理工具
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;gitlab工作流程&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;1.创建项目并克隆
+2.创建项目某featuref分支
+3.编写代码并提交至该分支
+4.推送该项目代码到远程gitlab分支服务器
+5.进行代码检查并提交master主分支合并申请
+6.项目领导审查代码并确认合并申请
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;gitlab社区版安装&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum -y install curl policycoreutils  openssh‐server  openssh‐clients  postfix&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;使用官方源安装时间过长可以使用以下清华源：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vim /etc/yum.repos.d/gitlab-ce.repo
+[gitlab-ce]
+name=gitlab-ce
+baseurl=http://mirrors.tuna.tsinghua.edu.cn/gitlab-ce/yum/el7
+repo_gpgcheck=0
+gpgcheck=0
+enabled=1
+gpgkey=https://packages.gitlab.com/gpg.key
+
+后使用yum makecache生成yum缓存
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;安装&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;yum -y install gitlab-ce&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;启动postfix&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;systemctl start postfix &amp;amp;&amp;amp;systemctl enable postfix&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;创建本地gitlat SSL证书&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mkdir-p /etc/gitlab/ssl&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;本地密钥生成、签署证书生成、pem证书生成：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#openssl genrsa -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; 2048
+#openssl req -new -key &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.csr&amp;#34;
+省略部分
+-----
+Country Name (2 letter code) [XX]: 回车即可
+State or Province Name (full name) []:回车即可
+Locality Name (eg, city) [Default City]:回车即可
+Organization Name (eg, company) [Default Company Ltd]:回车即可
+Organizational Unit Name (eg, section) []:回车即可
+Common Name (eg, your name or your server&amp;#39;s hostname) []:gitlab.example.com
+Email Address []:admin@example.com 
+
+Please enter the following &amp;#39;extra&amp;#39; attributes
+to be sent with your certificate request
+A challenge password []:123456 
+An optional company name []: 回车即可
+
+签署证书生成：
+#openssl  x509 -req -days 365 -in &amp;#34;/etc/gitlab/ssl/gitlab.example.com.csr&amp;#34;  -signkey &amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34; -out &amp;#34;/etc/gitlab/ssl/gitlab.example.com.crt&amp;#34;
+显示结果：
+Signature ok
+subject=/C=XX/L=Default City/O=Default Company Ltd/CN=gitlab.example.com/emailAddress=admin@example.com
+Getting Private key
+PEM证书生成：
+#openssl  dhparam -out /etc/gitlab/ssl/dhparams.pem  2048
+生成证书时间挺久的 Emmmm...
+
+#ll /etc/gitlab/ssl/ 查看证书是否生成4个证书文件
+#chmod 600 /etc/gitlab/ssl/* 赋予600权限
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;修改gitlab.rb&lt;/strong&gt;
+&lt;code&gt;vim /etc/gitlab/gitlab.rb&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;找到external_url &amp;#39;https://gitlab.example.com/&amp;#39; 将http改为https
+
+找到 redirect_http_to_https
+修改 nginx [&amp;#39;redirect_http_to_https&amp;#39;] =true 将所有http请求转发到
+https
+
+找到ssl_certificate
+修改 nginx [&amp;#39;ssl_certificate&amp;#39;] =&amp;#34;/etc/gitlab/ssl/gitlab.example.com.crt&amp;#34;
+
+修改nginx [&amp;#39;ssl_certificate_key&amp;#39;] =&amp;#34;/etc/gitlab/ssl/gitlab.example.com.key&amp;#34;
+
+修改nginx [&amp;#39;ssl_dhparam&amp;#39;] = &amp;#34;/etc/gitlab/ssl/dhparams.pem&amp;#34;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;gitlab-ctl  reconfigure&lt;/code&gt;初始化部署gitlab服务配置&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;看到这里，gitlab初始化完成Running handlers:Running handlers completeChef Client finished, 435/620 resources updated in 02 minutes 53 secondsgitlab Reconfigured!
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;修改Gitlab-http.conf
+&lt;code&gt;vim /var/opt/gitlab/nginx/conf/gitlab-http.conf&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;server_name gitlab.example.com;  rewrite ^(.*)$  https://$host$1 permanent; #添加此行即可
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;code&gt;gitlab-ctl restart&lt;/code&gt;  #重启使配置文件生效&lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;修改本地host文件&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;增加一行虚拟机ip    gitlab.example.com
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;web端访问&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;浏览器打开URL：gitlab.example.com&lt;/p&gt;
+&lt;p&gt;进入之后需要设置第一次密码!！
+默认用户是root&lt;/p&gt;</description>
+        </item>
+        <item>
+        <title>Zabbix 手机短信报警代码</title>
+        <link>/post/zabbix-tel/</link>
+        <pubDate>Wed, 20 Jun 2018 10:43:46 +0800</pubDate>
+        
+        <guid>/post/zabbix-tel/</guid>
+        <description>&lt;p&gt;由于在公安行业，所管理的服务器不能连接互联网，仅内网通信，但一整天不可能整天盯着zabbix web，特配置为短信报警。&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#!/bin/bash
+#export = $1,$2,$3
+echo data &amp;gt;&amp;gt;/tmp/shun2.log
+echo $1 &amp;gt;&amp;gt; /tmp/shun2.log
+echo $2 &amp;gt;&amp;gt; /tmp/shun2.log
+echo $3 &amp;gt;&amp;gt; /tmp/shun2.log
+
+注意关于下面这句是环境所提，若要使用需根据环境需求
+curl -X POST -d &amp;#34;phones[]=$1&amp;amp;content=$2+$3&amp;amp;moduleId=tech&amp;#34; http://IP:短信接口端口/searchservices/identity/noteService/sendNote
+&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        <item>
+        <title>ELK集群 部署</title>
+        <link>/post/elk-make/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/elk-make/</guid>
+        <description>&lt;h1 id=&#34;elk集群&#34;&gt;ELK集群&lt;/h1&gt;
+&lt;ul&gt;
+&lt;li&gt;环境&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;es-node1    10.0.18.118   主节点
+es-node2     10.0.18.117  从节点
+
+用户权限说明：
+除了elasticsearch不能用root运行，其他程序均可使用root安装
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;es-node1-操作&#34;&gt;es-node1 操作&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;安装&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# yum -y install jre
+
+# wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.6.1.tar.gz
+
+# tar xf elasticsearch-6.6.1.tar.gz  -C /data/server/es/
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;创建相关目录&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;# mkdir -p /data/server/es/elasticsearch-6.6.1/logs
+# #mkdir /data/es/data -p #数据存储目录
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;编辑配置文件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &amp;#34;*&amp;#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.117] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+
+   以上配置在es配置文件中前后写入必须有空格
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;系统配置（root用户操作）&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#vim /etc/security/limits.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;* soft nofile 65536
+
+* hard nofile 131072
+
+* soft nproc 2048
+
+* hard nproc 4096
+     *代表所有用户
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#vim /etc/sysctl.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;vm.max_map_count = 655360
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#sysctl -p &amp;amp;&amp;amp; reboot 必须重启系统&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;启动ES&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#useradd elk &amp;amp;&amp;amp; su elk
+$./bin/elasticsearch  -d （-d 参数为后台运行）
+$netstat  -tnlp |grep 9200&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$ curl http://localhost:9200&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/1.png&#34;
+	width=&#34;654&#34;
+	height=&#34;339&#34;
+	srcset=&#34;/post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_480x0_resize_box_3.png 480w, /post/elk-make/1_hud2dfc8fb599fc4de98a14ba5ae7520a5_24535_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;192&#34;
+		data-flex-basis=&#34;463px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;es-node2-操作&#34;&gt;es-node2 操作&lt;/h2&gt;
+&lt;p&gt;1.重新执行es-node1中的：&lt;code&gt;创建相关目录（数据存储目录）&lt;/code&gt; 、 &lt;code&gt;系统配置（root用户操作）&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;1.1 赋予用户权限&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk -R /data/server/es/&lt;em&gt;es/&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk -R es/&lt;em&gt;chown elk.elk -R /data/es/&lt;/em&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;2.从es-node1 下发到es-node2（使用root用户下发）&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;cd /data/server/es&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;scp -r elasticsearch-6.6.1/ 10.0.18.117:&amp;lsquo;pwd&amp;rsquo;
+&lt;code&gt;es2只需要修改node.name即可，其他都与es1相同配置&lt;/code&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;es-node2的配置文件&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#cat elasticsearch.yml|grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;
+cluster.name: ELK
+node.name: es-node1 #节点唯一名称，不可和其他节点重复
+
+node.master: true
+node.data: true
+node.ingest: true
+node.attr.rack: r1
+path.data: /data/es/data   
+path.logs: /data/server/es/elasticsearch-6.6.1/logs/
+network.host: 0.0.0.0
+http.port: 9200
+transport.tcp.port: 9300
+http.cors.enabled: true
+http.cors.allow-origin: &amp;#34;*&amp;#34; 
+http.max_content_length: 1024mb
+gateway.recover_after_nodes: 1
+gateway.recover_after_time: 5m
+cluster.routing.allocation.node_initial_primaries_recoveries: 8
+cluster.routing.allocation.node_concurrent_recoveries: 2
+indices.recovery.max_bytes_per_sec: 256mb
+discovery.zen.minimum_master_nodes: 1 
+discovery.zen.ping.unicast.hosts: [10.0.18.118] #这里是其他节点的ip
+cluster.routing.allocation.same_shard.host: true
+discovery.zen.fd.ping_timeout: 120s
+discovery.zen.fd.ping_retries: 6
+discovery.zen.fd.ping_interval: 30s
+
+ 以上配置在es配置文件中前后写入必须有空格
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;3.启动测试即可&lt;/p&gt;
+&lt;h2 id=&#34;es-node1-安装head插件&#34;&gt;es-node1 安装head插件&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;安装教程：https://github.com/mobz/elasticsearch-head&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;git clone git://github.com/mobz/elasticsearch-head.git 
+cd elasticsearch-head
+npm install 
+vim _site/app.js
+#修改 『http://localhost:9200』字段到本机ES端口与IP
+
+grunt server
+#打开浏览器 http://localhost:9100
+
+elasticsearch-head所属组：elk
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/elk-make/2.png&#34;
+	width=&#34;751&#34;
+	height=&#34;422&#34;
+	srcset=&#34;/post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_480x0_resize_box_3.png 480w, /post/elk-make/2_hu5a21f82c8e3beac8a39b1df5431f39fc_39038_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;177&#34;
+		data-flex-basis=&#34;427px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h1 id=&#34;logstash客户端安装配置&#34;&gt;Logstash客户端安装配置&lt;/h1&gt;
+&lt;p&gt;&lt;strong&gt;说明&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  由于10.0.18.117（es-node2）中有web服务器（nginx+tomcat）搭来玩的，就选择这台来使用安装Logstash
+  安装目录为：
+          /data/server/es/
+安装用户为root
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#wget &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/logstash/logstash-6.6.1.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#tar xf logstash-6.6.1.tar.gz &amp;amp;&amp;amp; cd logstash-6.6.1&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;创建一个test.conf&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;vim test.conf&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;input {
+     stdin{}
+
+}
+
+output {
+     stdout {
+       codec =&amp;gt; rubydebug{}
+     }
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#./bin/logstash -f test.conf
+#netstat -tnlp |grep 9600     #查看端口是否起来&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;创建一个test1.conf(提取系统日志)&lt;/li&gt;
+&lt;/ul&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;input {　　　　　　　#这里的输入使用的文件，即日志文件messsages
+file {　　　
+path =&amp;gt; “/var/log/messages”　　　＃这是日志文件的绝对路径
+start_position =&amp;gt; “beginning”　＃这个表示从messages的第一行读取，即文件开始处
+}
+}
+
+output {　　　　＃输出到es
+elasticsearch {
+hosts =&amp;gt; [&amp;#34;10.0.18.118:9200&amp;#34;,&amp;#34;10.0.18.117:9200&amp;#34;]
+index =&amp;gt; &amp;#34;system-messages-%{+YYYY-MM}&amp;#34;　＃这里将按照这个索引格式来创建索引
+}
+}
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;启动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#./bin/logstash -f  test1.conf &amp;amp;   #传输数据将会展示&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#nohup ./bin/logstash -f  test2.conf  &amp;ndash;config.reload.automatic &amp;amp;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;p&gt;&lt;code&gt;nohup .这种后台运行方式 会把许多日志记到这个文件里面去,会在执行目录生成一个nohup.txt 已经读取ES-NODE2的/var/log/messages”中的日志传输到es服务节点上&lt;/code&gt;
+&lt;img src=&#34;/post/elk-make/3.png&#34;
+	width=&#34;1308&#34;
+	height=&#34;640&#34;
+	srcset=&#34;/post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_480x0_resize_box_3.png 480w, /post/elk-make/3_hu236e7c19629578e981a8f1ffed41944b_79688_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;204&#34;
+		data-flex-basis=&#34;490px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这时，到HEAD插件上去看：
+&lt;img src=&#34;/post/elk-make/4-1.png&#34;
+	width=&#34;1059&#34;
+	height=&#34;366&#34;
+	srcset=&#34;/post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/4-1_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;289&#34;
+		data-flex-basis=&#34;694px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/4-2.png&#34;
+	width=&#34;1489&#34;
+	height=&#34;472&#34;
+	srcset=&#34;/post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_480x0_resize_box_3.png 480w, /post/elk-make/4-2_huc4e53af8bd4876bb9e405c243980bc22_87067_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;315&#34;
+		data-flex-basis=&#34;757px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;安装kibana&#34;&gt;安装kibana&lt;/h2&gt;
+&lt;p&gt;&lt;strong&gt;说明&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;  由于10.0.18.118（es-node1）,虽然那台都无所谓。两台es那个es节点挂掉都会成为主节点,反正数据都一样
+  安装目录为：
+          /data/server/es/
+安装用户为elk
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;#wget &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/kibana/kibana-6.6.1-linux-x86_64.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#tar xf kibana-6.6.1-linux-x86_64.tar.gz&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;#chown elk.elk kibana-6.6.1-linux-x86_64 -R &amp;amp;&amp;amp; su elk&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$# cat  config/kibana.yml |grep -v &amp;lsquo;#&amp;rsquo;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;server.port: 5601
+server.host: &amp;#34;0.0.0.0&amp;#34;
+elasticsearch.hosts: [&amp;#34;http://localhost:9200&amp;#34;]
+&lt;/code&gt;&lt;/pre&gt;&lt;ul&gt;
+&lt;li&gt;启动&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$nohup /bin/kibana &amp;amp; #后台运行kibana&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;ul&gt;
+&lt;li&gt;WEB
+&lt;img src=&#34;/post/elk-make/5-1.png&#34;
+	width=&#34;1273&#34;
+	height=&#34;746&#34;
+	srcset=&#34;/post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_480x0_resize_box_3.png 480w, /post/elk-make/5-1_hufcc6a7fb7550276b2bdea74a7624edc0_59907_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;170&#34;
+		data-flex-basis=&#34;409px&#34;
+	
+&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/5-2.png&#34;
+	width=&#34;1559&#34;
+	height=&#34;697&#34;
+	srcset=&#34;/post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_480x0_resize_box_3.png 480w, /post/elk-make/5-2_hu594c0e9354b3822d8aa503eba58538c0_137713_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;223&#34;
+		data-flex-basis=&#34;536px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/5-3.png&#34;
+	width=&#34;1916&#34;
+	height=&#34;472&#34;
+	srcset=&#34;/post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_480x0_resize_box_3.png 480w, /post/elk-make/5-3_hu49c9ac64af3893425c6e86671743b719_81764_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;405&#34;
+		data-flex-basis=&#34;974px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;p&gt;这是es中创建的索引数据：
+&lt;img src=&#34;/post/elk-make/5-4.png&#34;
+	width=&#34;969&#34;
+	height=&#34;617&#34;
+	srcset=&#34;/post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_480x0_resize_box_3.png 480w, /post/elk-make/5-4_hu968b173ca4f01e6c5e88caddfc4072a2_72373_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;157&#34;
+		data-flex-basis=&#34;376px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;h2 id=&#34;安装metricbeat&#34;&gt;安装metricbeat&lt;/h2&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;因为kibana web页面老是崩溃，需要安装此插件来结合使用
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;$curl -L -O &lt;a class=&#34;link&#34; href=&#34;https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-6.6.1-linux-x86_64.tar.gz&lt;/a&gt;&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$tar xzvf metricbeat-6.6.1-linux-x86_64.tar.gz&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;blockquote&gt;
+&lt;p&gt;$vim metricbeat.yml #metricbeat配置文件&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;metricbeat.config.modules:
+  path: ${path.config}/modules.d/*.yml
+  reload.enabled: false
+
+setup.template.settings:
+  index.number_of_shards: 1
+  index.codec: best_compression
+
+setup.kibana:
+
+  host: &amp;#34;127.0.0.1:5601&amp;#34;
+
+output.elasticsearch:
+  hosts: [&amp;#34;127.0.0.1:9200&amp;#34;]
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+&lt;/code&gt;&lt;/pre&gt;&lt;blockquote&gt;
+&lt;p&gt;$ ./metricbeat -e&lt;/p&gt;
+&lt;/blockquote&gt;
+&lt;h2 id=&#34;创建索引&#34;&gt;创建索引&lt;/h2&gt;
+&lt;p&gt;PS : 我把浏览器换为谷歌浏览器可以页面中文了&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;/post/elk-make/6-001.png&#34;
+	width=&#34;1059&#34;
+	height=&#34;366&#34;
+	srcset=&#34;/post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_480x0_resize_box_3.png 480w, /post/elk-make/6-001_hua2d6f50763bd15c72daa4847ee2a9ed3_45507_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;289&#34;
+		data-flex-basis=&#34;694px&#34;
+	
+&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;之前使用logstash在117中采集系统日志到es，那么在kibana就使用这个名称来创建索引
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;img src=&#34;/post/elk-make/6-01.png&#34;
+	width=&#34;857&#34;
+	height=&#34;664&#34;
+	srcset=&#34;/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;129&#34;
+		data-flex-basis=&#34;309px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-01.png&#34;
+	width=&#34;857&#34;
+	height=&#34;664&#34;
+	srcset=&#34;/post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_480x0_resize_box_3.png 480w, /post/elk-make/6-01_hu2547840765b887b03df8815b119e86b3_50324_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;129&#34;
+		data-flex-basis=&#34;309px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-1.png&#34;
+	width=&#34;987&#34;
+	height=&#34;590&#34;
+	srcset=&#34;/post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_480x0_resize_box_3.png 480w, /post/elk-make/6-1_hu697dc61cbe412fee0e06d130bae8e934_69058_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;167&#34;
+		data-flex-basis=&#34;401px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-2.png&#34;
+	width=&#34;914&#34;
+	height=&#34;542&#34;
+	srcset=&#34;/post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_480x0_resize_box_3.png 480w, /post/elk-make/6-2_hud371421713f6349ea14b1d84f74e762e_49601_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;168&#34;
+		data-flex-basis=&#34;404px&#34;
+	
+&gt;
+&lt;img src=&#34;/post/elk-make/6-3.png&#34;
+	width=&#34;1639&#34;
+	height=&#34;769&#34;
+	srcset=&#34;/post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_480x0_resize_box_3.png 480w, /post/elk-make/6-3_huabeeed7ee8b1b4fd16048f7184f8b1e0_125586_1024x0_resize_box_3.png 1024w&#34;
+	loading=&#34;lazy&#34;
+	
+	
+		class=&#34;gallery-image&#34; 
+		data-flex-grow=&#34;213&#34;
+		data-flex-basis=&#34;511px&#34;
+	
+&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL主从复制</title>
+        <link>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/mysql%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6/</guid>
+        <description>&lt;pre&gt;&lt;code&gt;                    #MySQL主从复制
+&lt;/code&gt;&lt;/pre&gt;
+&lt;p&gt;&lt;strong&gt;原理&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;一、什么是主从复制
+将主数据库中的DDL和DML操作通过二进制日志（BINLOG）传输到从数据库上，然后将这些日志重新执行（重做）；从而使得从数据库的数据与主数据库保持一致。
+二、主从复制的作用
+1、主数据库出现问题，可以切换到从数据库。
+2、可以进行数据库层面的读写分离，
+3、可以在从数据库上进行日常备份
+三 过程：
+将Mater节点的数据通过bin-log二进制文件同步到Slave节点
+Binary log：主数据库的二进制日志
+Relay log：从服务器的中继日志
+第一步：master在每个事务更新数据完成之前，将该操作记录串行地写入到binlog文件中。
+第二步：salve开启一个I/O Thread，该线程在master打开一个普通连接，主要工作是binlog dump process。如果读取的进度已经跟上了master，就进入睡眠状态并等待master产生新的事件。I/O线程最终的目的是将这些事件写入到中继日志中。
+第三步：SQL Thread会读取中继日志，并顺序执行该日志中的SQL事件，从而与主数据库中的数据保持一致。
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;环境和安装&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;系统：centos7
+SQL版本：mysql5.7.23  单机多实例3306、3307、3308、
+3306为Master主节点，3307、3308为Slave从节点
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;解决mysql所需要的的依赖包&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#yum -y install ncurses-devel libaio-devel cmake &lt;/code&gt;
+&lt;code&gt;#yum -y install ncurses-libs  gcc-c++&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;msql下载地址：http://ftp.ntu.edu.tw/MySQL/Downloads/
+版本为解压即用的：mysql-5.7.23-linux-glibc2.12-x86_64.tar.gz
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;安装&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;#tar xf mysql-5.7.23-linux-glibc2.12-x86_64.tar
+# mv mysql-5.7.23-linux-glibc2.12-x86_64 /usr/local/mysql
+# chown mysql.mysql -R /usr/local/mysql 
+# chmod 777 -R /usr/local/mysql
+# useradd mysql -r -s /sbin/nologin 
+# mkdir -p /data/data{3306,3307,3308}/data
+# chown  mysql.mysql -R /data/*
+# cp /usr/local/mysql/support-files/mysqld_multi.server /etc/init.d/mysqld_multi
+# chmod +x /etc/init.d/mysqld_multi #赋予启动脚本权限
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;配置Mysql的配置文件/etc/my.cnf，内容如下：&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;　　　　[mysqld_multi]  
+　　　　mysqld = /usr/local/mysql/bin/mysqld
+　　　　mysqladmin = /usr/local/mysql/bin/mysqladmin
+　　　 log = /tmp/mysql_multi.log
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;添加环境变量&lt;/strong&gt;
+　1.在文件最后面添加内容：
+&lt;code&gt; vim /etc/profile&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;export MYSQL_HOME=/usr/local/mysql
+export PATH=${MYSQL_HOME}/bin:$PATH
+&lt;/code&gt;&lt;/pre&gt;&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;使修改的配置文件生效：&lt;code&gt;source /etc/profile&lt;/code&gt;
+&lt;strong&gt;初始化MySQL&lt;/strong&gt;
+&lt;code&gt;#chown mysql.mysql -R /usr/local/mysql/mysql_files&lt;/code&gt;
+&lt;code&gt;#/usr/local/mysql/bin/mysqld --initialize --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3307/data &lt;/code&gt; 该命令会随机生成一个密码，以3307为例，可以从命令输出中查看密码
+&lt;code&gt;#/usr/local/mysql/bin/mysql_ssl_rsa_setup --user=mysql --basedir=/usr/local/mysql --datadir=/data/mysql/3308/data&lt;/code&gt; #各实例的SSL连接，以3308为例&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;启动全部实例 ：&lt;code&gt; /etc/init.d/mysqld_multi start&lt;/code&gt;
+&lt;strong&gt;连接实例&lt;/strong&gt;
+&lt;code&gt;mysql -S /tmp/mysql.sock1 -p&lt;/code&gt;前面生成的密码
+进去后修改root密码：&lt;code&gt; set password=password(&#39;123456&#39;);&lt;/code&gt;
+刷新权限：&lt;code&gt;flush privileges;&lt;/code&gt;
+&lt;strong&gt;关闭和启动单实例&lt;/strong&gt;
+&lt;code&gt;#mysqladmin -uroot -p  -S /data/mysql/3308/mysql.sock shutdown&lt;/code&gt; #以3308关闭为例
+&lt;code&gt;#/etc/init.d/mysqld_multi start 3&lt;/code&gt;  #启动3308为例
+&lt;strong&gt;/etc/my.cnf多实例和主从配置&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;[mysqld1]
+log-bin=mysql-bin     #启用二进制日记
+server-id=142         #server-id 唯一的！！服务器唯一ID，默认是1，一般取IP最后一段，也可以自定义
+datadir = /data/mysql/3306/data       #设置数据目录
+socket = /data/mysql/3306/mysql.sock         #设置sock文件存放路径
+port = 3306                      #设置监听开放端口　
+user = mysql                           #设置运行用户
+performance_schema = off          #关闭监控
+innodb_buffer_pool_size = 32M         #设置innodb 缓存大小
+bind_address = 0.0.0.0                  #设置监听IP地址
+skip-name-resolve = 0                 #关闭DNS反向解析
+[mysqld2]
+log-bin=mysql-bin
+server-id=143
+datadir = /data/mysql/3307/data       
+socket = /data/mysql/3307/mysql.sock         
+port = 3307                    
+user = mysql                           
+performance_schema = off         
+innodb_buffer_pool_size = 32M         
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                
+[mysqld3]
+log-bin=mysql-bin
+server-id=144
+datadir = /data/mysql/3308/data      
+socket = /data/mysql/3308/mysql.sock        
+port = 3308                      
+user = mysql                          
+performance_schema = off         
+innodb_buffer_pool_size = 32M        
+bind_address = 0.0.0.0                  
+skip-name-resolve = 0                 
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;进入3306  Master主节点&lt;/strong&gt;
+&lt;code&gt;#mysql -uroot -pshunconf -S /data/mysql/3306/mysql.sock&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;删除5张表，并重新导入脚本
+mysql&amp;gt;use mysql
+mysql&amp;gt;drop table slave_master_info;
+mysql&amp;gt;drop table slave_relay_log_info;
+myqsl&amp;gt;drop table slave_worker_info;
+mysql&amp;gt;drop table innodb_index_stats;
+mysql&amp;gt;drop table innodb_table_stats;
+mysql&amp;gt;source /usr/coolpad/mysql/share/mysql_system_tables.sql #恢复数据库，后重启数据库
+mysql&amp;gt;show master start;
+mysql&amp;gt;grant all privileges on *.* to &amp;#39;root&amp;#39;@&amp;#39;%&amp;#39; identified by &amp;#39;shunconf&amp;#39; with grant option;授权Slave从节点远程连接
+取File和positin的值用到slave上
++------------------+----------+--------------+------------------+-------------------+
+| File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
++------------------+----------+--------------+------------------+-------------------+
+| mysql-bin.000005 |      154 |              |                  |                   |
++------------------+----------+--------------+------------------+-------------------+
+1 row in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;进入3307/3308 Slaver从节点&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;#mysql -uroot -pshunconf -S /data/mysql/3307/mysql.sock&lt;/code&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt;SET GLOBAL SQL_SLAVE_SKIP_COUNTER=1;
+mysql&amp;gt;change master to master_host=&amp;#39;127.0.0.1&amp;#39;, master_user=&amp;#39;root&amp;#39;,master_password=&amp;#39;shunconf&amp;#39;, master_log_file=&amp;#39;mysql-bin.000009&amp;#39;,master_log_pos=154;    取master的show master table；注意不要断开，154数字前后无单引号。
+mysql&amp;gt; start slave; #启用从，stop为停止
+mysql&amp;gt;  show slave status\G  查看Slaver 从节点状态
+*************************** 1. row ***************************
+               Slave_IO_State: Connecting to master
+                  Master_Host: localhost #主服务器地址
+                  Master_User: root  #授权帐户名，尽量避免使用root，测试环境随意！哈哈
+                  Master_Port: 3306   #Mster 主节点的端口
+                Connect_Retry: 60
+              Master_Log_File: mysql-bin.000005
+              Read_Master_Log_Pos: 154   #同步读取二进制日志
+               Relay_Log_File: localhost-relay-bin.000001
+                Relay_Log_Pos: 4
+              Relay_Master_Log_File: mysql-bin.000005
+             Slave_IO_Running: yes  #必须为yes，为Connecting、NO的值都是存在故障的
+            Slave_SQL_Running: yes  #必须为yes
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;在Mster主节点建立库并测试Slave节点&lt;/strong&gt;
+&lt;strong&gt;Mater操作：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt; crate database shun;
+mysql&amp;gt; create table test(
+    -&amp;gt;    id int(4) not null primary key auto_increment,
+    -&amp;gt; name char(20) not null);
+mysql&amp;gt; insert into test values(1,&amp;#39;shun&amp;#39;);
+mysql&amp;gt; insert into test(name) values(&amp;#39;shunconf&amp;#39;);
+mysql&amp;gt; show databases;
++--------------------+
+| Database           |
++--------------------+
+| information_schema |
+| mysql              |
+| performance_schema |
+| shun               |
+| sys                |
++--------------------+
+5 rows in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;Slave节点操作：&lt;/strong&gt;&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;mysql&amp;gt; use shun;
+mysql&amp;gt; show tables test;
+mysql&amp;gt; select * from test;
++----+----------+
+| id | name     |
++----+----------+
+|  1 | shun     |
+|  2 | shunconf |
++----+----------+
+2 rows in set (0.00 sec)
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;&lt;strong&gt;主从部署同步完成！数据已经同步完成&lt;/strong&gt;&lt;/p&gt;
+</description>
+        </item>
+        <item>
+        <title>MySQL基本操作</title>
+        <link>/post/mysql/</link>
+        <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+        
+        <guid>/post/mysql/</guid>
+        <description>&lt;p&gt;这段时间重新学习了一下mysql的增删查改。
+登录：mysql -uroot -pshunconf
+mysql设置密码：
+mysqladmin -u root -p shunconf
+mysql修改密码：
+mysqladmin -u root -p shunconf passwd ‘shunshun’
+改完密码后，重新启动mysql并登录&lt;/p&gt;
+&lt;p&gt;sql查看帮助命令为help；/h等，如果单独查看一个命令的help信息如下：
+help show；&lt;/p&gt;
+&lt;p&gt;select user(); 查看当前登录用户
+show 命令：
+show databases；  查看库
+show databases like “zabbix”； 查看指定库
+show databases like &amp;lsquo;%za%&amp;rsquo; ；查看指定库，以%分号来进行全匹配，%可以放到前后面，也可单独使用一个%号&lt;/p&gt;
+&lt;p&gt;grant授权命令：
+GRANT ALL ON mysql.* TO &amp;lsquo;shun&amp;rsquo;@&amp;rsquo;localhost&amp;rsquo; IDENTIFIED BY &amp;lsquo;PASSWD&amp;rsquo;; #创建用户并授权，其中mysql.*是库名&lt;/p&gt;
+&lt;p&gt;create创建数据库
+create database shun1; 创建一个名为shun的库&lt;/p&gt;
+&lt;p&gt;create和grant结合使用
+create user shun2@localhost identified by &amp;lsquo;shunconf&amp;rsquo;；
+grant all on privileges shun.* to shun2@localhost；
+show grants for shun2@localhost\G 查看是否已经拥有权限，使用\G 生成图表显示&lt;/p&gt;
+&lt;p&gt;drop删除数据库
+drop database shun1；删除指定库
+drop table users; 删除指定表&lt;/p&gt;
+&lt;p&gt;查看库的字符集为utf-8
+show create database shun；查看库字符集
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+| Database | Create Database                                               |
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+| shun     | CREATE DATABASE &lt;code&gt;shun&lt;/code&gt; /*!40100 DEFAULT CHARACTER SET utf8 */ | #为utf-8
++&amp;mdash;&amp;mdash;&amp;mdash;-+&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;&amp;mdash;+
+创建指定字符集如下
+CREATE DATABASE &lt;code&gt;shun1&lt;/code&gt; DEFAULT CHARACTER SET gbk; 通过查看库的字符集可以得到命令，简单修改即可使用&lt;/p&gt;
+&lt;p&gt;字符集：
+字符集是来定义mysql字符串的存储方式，校对规则则是定义了比较字符串的方式&lt;/p&gt;
+&lt;p&gt;select查看数据库连接数
+select user,host from mysql.user 查看连接数&lt;/p&gt;
+&lt;p&gt;use切换数据库
+use shun；相当于linux的cd
+select database(); 查看是否已经进入shun库
+show tables; 查看shun库中的表&lt;/p&gt;
+&lt;p&gt;system跳出数据库执行linux如下：
+system ls / 执行并显示命令结果后回到mysql&lt;/p&gt;
+&lt;p&gt;表操作：
+show create table test \G 查看test建表用的语句
+desc test； 查看表结构
+建立test表
+create table test(
+id int(4) not null primary key auto_increment, 设置键值4，not null为禁止为空 primary key定义唯一
+name char(20) not null 设置表长度为20
+);
+再创建一个表：
+create table test1(
+name char(20) not null primary key,
+age int(3) not null
+);&lt;/p&gt;
+&lt;p&gt;向test表里插入数据：
+insert into test values（1，‘shun’）；
+insert into test(name) values(&amp;lsquo;shunconf&amp;rsquo;); 向指定列名插入数据，不需要输入id（自动生成id）
+insert into test(id,name) values(11,&amp;lsquo;zhazha&amp;rsquo;),(12,&amp;lsquo;heheda&amp;rsquo;) 批量插入数据
+insert into test(name) values(&amp;lsquo;1234&amp;rsquo;),(&amp;lsquo;4567&amp;rsquo;); 批量插入数据
+查询表：
+select * from test;
+select * from test where name=&amp;lsquo;shun2&amp;rsquo; 查看表里指定数据
+select * from test limit 2；显示查询数据为2行
+select * from test order by id limit 5 查询数据为倒序5行
+select * from test order by id limit 4 查询数据为升序5行
+select * from test where id&amp;lt;3; 查询数据id小于3 反之使用&amp;gt;3的
+select * from test  where id &amp;gt;6 adn id&amp;lt;8 判断ID大于6 而小于8的数据
+select * from test  where id  &amp;gt;4 or id &amp;lt;6
+and 和 or 参数为：前者and是交集，后者or则为并集
+多表查询：
+select * from test,test1 where test.name=test1.name; 查询test test1这2张表相同的name&lt;/p&gt;
+&lt;p&gt;更改表中字段数据
+update test1 set name=&amp;lsquo;shunconf&amp;rsquo; where name=&amp;lsquo;shun11&amp;rsquo;;修改表中的数据将set name=&amp;lsquo;shunconf&amp;rsquo; 以where判断表中存在name为shun11 进行修改成shunconf&lt;/p&gt;
+&lt;p&gt;alter添加字段
+alter table test add sex char(4)； 添加sex字段
+alter table test add age int(4) after name; 在name字段后面添加age列&lt;/p&gt;
+&lt;p&gt;删除字段
+alter table test drop sex；将test表中的sex字段删除&lt;/p&gt;
+&lt;p&gt;删除表中的数据
+delete from test where id =3; 删除表中id等于3的数据 可以使用&amp;lt; &amp;gt;  % 大于号、小于号、百分号来匹配
+delete from test where  name=&amp;lsquo;shun1&amp;rsquo;删除表中name等于shun的数据&lt;/p&gt;
+&lt;p&gt;清空表数据
+truncate table test；&lt;/p&gt;
+&lt;p&gt;修改表名
+rename table test1 to test0； 将test1表名改成test0&lt;/p&gt;
+&lt;p&gt;set变量
+set names gbk；将表的name设置支持中文
+insert into test(name) values(&amp;lsquo;顺&amp;rsquo;)&lt;/p&gt;
+&lt;p&gt;mysqldump备份数据库
+mysql -uroot -p&amp;rsquo;shunconf&amp;rsquo; -S /var/lib/mysql/mysql.sock -B zabbix &amp;gt;/tmp/zabbixsqlbak.sql 在sheel下执行 以zabbix库为备份，备份时需要根据mysql.sock路径，-B参数指定备份那个库&lt;/p&gt;
+&lt;p&gt;mysqldump恢复数据库
+mysqldump -uroot -p&amp;rsquo;shunconf&amp;rsquo; -S /var/lib/mysql/mysql.sock &amp;lt; /tmp/zabbixbak.sql&lt;/p&gt;
+&lt;p&gt;查看数据库状态
+mysql -uroot -p&amp;rsquo;shunconf&amp;rsquo; -e &amp;lsquo;show processlist&amp;rsquo;&lt;/p&gt;
+&lt;p&gt;mysql存储引擎
+INNODB 和MySAM是最主流的两个存储引擎，现在数据库版本默认的存储引擎是InnoDB.
+InnoDB 特性：
+事务的支持：     支持事务
+锁粒度：    行锁
+并发性：高并发
+构成结构和缓存机制：数据和索引文件都存在.idb文件里，并都缓存在内存里
+select count(&lt;em&gt;) ：需要扫描全表，统计所有行数。
+MySAM  特性：
+事务的支持：   不支持事务
+锁粒度：      表锁
+构成结构和缓存机制：数据文件的扩展名为.myd(MYData)
+索引文件的扩展名是.myi(MYIndex)
+只缓存索引文件，不缓存数据文件
+select count(&lt;/em&gt;) ： 只需要从计数器中读出保存好的行数即可&lt;/p&gt;
+&lt;pre tabindex=&#34;0&#34;&gt;&lt;code&gt;&lt;/code&gt;&lt;/pre&gt;</description>
+        </item>
+        
+    </channel>
+</rss>
